@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.gnome.shell.extensions.spotify-ext" path="/org/gnome/shell/extensions/spotify-ext/">
+    <key name="mode" type="s">
+      <choices>
+        <choice value="icon"/>
+        <choice value="pill"/>
+      </choices>
+      <default>'icon'</default>
+      <summary>Panel display</summary>
+      <description>Icon only, or album cover with title and status.</description>
+    </key>
+    <key name="position" type="s">
+      <choices>
+        <choice value="left"/>
+        <choice value="center"/>
+        <choice value="right"/>
+      </choices>
+      <default>'right'</default>
+      <summary>Panel position</summary>
+      <description>Where the indicator sits in the top panel.</description>
+    </key>
+    <key name="lyrics-visible" type="b">
+      <default>true</default>
+      <summary>Show lyrics</summary>
+      <description>Show synced lyrics in the now-playing card.</description>
+    </key>
+    <key name="duck-enabled" type="b">
+      <default>true</default>
+      <summary>Lower music when mic is used</summary>
+      <description>Duck Spotify volume while a microphone stream is active.</description>
+    </key>
+    <key name="sleep-minutes" type="i">
+      <range min="0" max="120"/>
+      <default>0</default>
+      <summary>Sleep timer</summary>
+      <description>Minutes until playback fades out and pauses. Zero disables the timer.</description>
+    </key>
+  </schema>
+</schemalist>

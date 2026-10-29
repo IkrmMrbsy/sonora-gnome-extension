@@ -1,0 +1,231 @@
+/* Cadence — panel indicator + now-playing card */
+
+.cadence-button {
+  -natural-hpadding: 0px;
+  -minimum-hpadding: 0px;
+}
+
+/* Pill fills the whole panel height: the panel button's themed 3px
+   transparent border is the gap that made it look small. Icon mode keeps
+   the default border so its geometry does not change. */
+.cadence-button.cadence-mode-pill {
+  border-width: 0px;
+}
+
+/* ---------- panel: icon mode ---------- */
+
+.cadence-icon-box {
+  margin-right: 6px;
+  border-radius: 12px;
+}
+
+.cadence-button:hover .cadence-icon-box {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* ---------- panel: pill mode ---------- */
+
+.cadence-pill {
+  margin-right: 6px;
+  padding: 0px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 13px;
+  background-color: rgba(13, 13, 18, 0.88);
+}
+
+.cadence-button:hover .cadence-pill {
+  background-color: rgba(255, 255, 255, 0.13);
+}
+
+.cadence-pill-row {
+  spacing: 6px;
+  padding: 0 10px;
+}
+
+.cadence-cover {
+  border-radius: 5px;
+  background-color: rgba(255, 255, 255, 0.10);
+}
+
+.cadence-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #f4f2ef;
+}
+
+/* ---------- pill slot: countdown or sleep/duck state ---------- */
+
+.cadence-slot {
+  spacing: 4px;
+  padding: 0 2px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background-color: transparent;
+  color: rgba(244, 242, 239, 0.60);
+}
+
+.cadence-slot-text {
+  font-size: 11px;
+  font-weight: 600;
+  font-feature-settings: "tnum";
+  color: #f4f2ef;
+}
+
+.cadence-slot-icon {
+  color: rgba(244, 242, 239, 0.95);
+}
+
+/* State chip (sleep / duck) is the only variant with a surface. */
+.cadence-slot.is-state {
+  padding: 2px 7px;
+  color: #f4f2ef;
+}
+
+.cadence-pill.paused .cadence-slot-text {
+  color: rgba(244, 242, 239, 0.55);
+}
+
+.cadence-pill.paused .cadence-slot-icon {
+  opacity: 0.55;
+}
+
+.cadence-pill.paused .cadence-title {
+  color: rgba(244, 242, 239, 0.55);
+}
+
+/* ---------- now-playing card ---------- */
+
+.cadence-card {
+  background-color: rgba(13, 13, 18, 0.94);
+  border-radius: 18px;
+}
+
+.cadence-head {
+  spacing: 12px;
+}
+
+.cadence-art {
+  border-radius: 11px;
+  background-color: rgba(255, 255, 255, 0.08);
+}
+
+.cadence-info {
+  spacing: 2px;
+}
+
+.cadence-song {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f4f2ef;
+}
+
+.cadence-artist {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.cadence-controls {
+  spacing: 12px;
+}
+
+.cadence-btn {
+  min-width: 26px;
+  min-height: 26px;
+  padding: 0;
+  border: 0;
+  border-radius: 13px;
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.cadence-btn:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+}
+
+.cadence-play {
+  min-width: 30px;
+  min-height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 15px;
+  background-color: #ffffff;
+  color: #111111;
+}
+
+.cadence-play:hover {
+  background-color: #f0f0f0;
+}
+
+.cadence-lyrics {
+  margin-top: 10px;
+}
+
+.cadence-lyric {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f4f2ef;
+}
+
+.cadence-next {
+  margin-top: 4px;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.32);
+}
+
+.cadence-progress {
+  margin-top: 12px;
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.14);
+}
+
+.cadence-fill {
+  border-radius: 2px;
+  background-gradient-direction: horizontal;
+  background-gradient-start: #ffffff;
+  background-gradient-end: rgba(255, 255, 255, 0.75);
+}
+
+.cadence-foot {
+  margin-top: 10px;
+  padding-top: 9px;
+  spacing: 6px;
+  border-top: 1px solid rgba(255, 255, 255, 0.10);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.cadence-foot-icon {
+  color: #3584e4;
+}
+
+.cadence-foot-label {
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.cadence-foot-stats {
+  spacing: 10px;
+}
+
+.cadence-streak {
+  spacing: 4px;
+}
+
+.cadence-streak-label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #f4f2ef;
+}
+
+.cadence-best-label {
+  padding-left: 10px;
+  border-left: 1px solid rgba(255, 255, 255, 0.10);
+  font-size: 11px;
+  color: rgba(255, 255, 255, 0.40);
+}
+
+.cadence-card-box.paused .cadence-song,
+.cadence-card-box.paused .cadence-artist {
+  color: rgba(244, 242, 239, 0.55);
+}
