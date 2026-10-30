@@ -9,7 +9,8 @@ import {averageColor} from './src/util/color.js';
 import {SonoraIndicator} from './src/ui/indicator.js';
 import {pixbufToRGBA} from './src/util/art.js';
 import {getSettings, loadConfig, watchConfig} from './src/core/settings.js';
-import {activeLine, parseLRC} from './src/core/lrc.js';
+import {activeLine} from './src/core/lrc.js';
+import {LyricsClient} from './src/core/lyrics.js';
 import {MicMonitor} from './src/core/mic.js';
 import {Spotify} from './src/core/player.js';
 import {
@@ -18,18 +19,7 @@ import {
 } from './src/core/stats.js';
 import {VolumeController} from './src/core/volume.js';
 
-const API = 'https://lrclib.net/api';
-const CACHE_LIMIT = 40;
 const PLAY_THRESHOLD = 30;
-
-function sleep(ms) {
-  return new Promise(resolve => {
-    GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
-      resolve();
-      return GLib.SOURCE_REMOVE;
-    });
-  });
-}
 
 function statsFile() {
   return Gio.File.new_for_path(
@@ -90,7 +80,7 @@ export default class SpotifyLyricsExtension extends Extension {
     this._playing = false;
     this._position = 0;
     this._positionAt = GLib.get_monotonic_time() / 1e6;
-    this._cache = new Map();
+    this._lyricsClient = new LyricsClient(this._cancellable);
     this._token = 0;
 
     this._cancellable = new Gio.Cancellable();
@@ -174,8 +164,8 @@ export default class SpotifyLyricsExtension extends Extension {
 
     this._pixbufs?.clear();
     this._pixbufs = null;
-    this._cache?.clear();
-    this._cache = null;
+    this._lyricsClient?.destroy();
+    this._lyricsClient = null;
     this._lines = [];
     this._track = null;
   }
@@ -482,19 +472,7 @@ export default class SpotifyLyricsExtension extends Extension {
 
   async _load(track) {
     const token = ++this._token;
-    const key = `${track.title}|${track.artist}|${track.album}|${track.duration}`;
-
-    let lines = this._cache.get(key);
-    if (!lines) {
-      lines = await this._fetch(track);
-      if (token !== this._token)
-        return;
-
-      this._cache.set(key, lines);
-      if (this._cache.size > CACHE_LIMIT)
-        this._cache.delete(this._cache.keys().next().value);
-    }
-
+    const lines = await this._lyricsClient.fetchFor(track);
     if (token !== this._token)
       return;
 
@@ -502,76 +480,6 @@ export default class SpotifyLyricsExtension extends Extension {
     // -2 forces the first tick to publish the "next line" before the song starts.
     this._lineIndex = -2;
     this._tick();
-  }
-
-  async _fetch(track) {
-    try {
-      const data = await this._getJSON(this._url('/get', {
-        track_name: track.title,
-        artist_name: track.artist,
-        album_name: track.album,
-        duration: track.duration,
-      }));
-      return parseLRC(data.syncedLyrics);
-    } catch (error) {
-      if (error.status !== 404)
-        return [];
-    }
-
-    try {
-      const results = await this._getJSON(this._url('/search', {
-        track_name: track.title.split(' - ')[0],
-        artist_name: track.artist,
-      }));
-
-      const best = (Array.isArray(results) ? results : [])
-        .filter(result => result.syncedLyrics)
-        .sort((a, b) => Math.abs(a.duration - track.duration) - Math.abs(b.duration - track.duration))[0];
-
-      return best ? parseLRC(best.syncedLyrics) : [];
-    } catch {
-      return [];
-    }
-  }
-
-  _send(message) {
-    return new Promise((resolve, reject) => {
-      this._http.send_and_read_async(
-        message, GLib.PRIORITY_DEFAULT, this._cancellable,
-        (session, result) => {
-          try {
-            resolve(session.send_and_read_finish(result));
-          } catch (error) {
-            reject(error);
-          }
-        });
-    });
-  }
-
-  async _getJSON(url, attempt = 0) {
-    const message = Soup.Message.new('GET', url);
-    message.request_headers.append('User-Agent', 'spotify-lyrics-ext/0.2 (GNOME Shell)');
-
-    const bytes = await this._send(message);
-    const status = message.get_status();
-    if (status !== Soup.Status.OK) {
-      if (status === Soup.Status.SERVICE_UNAVAILABLE && attempt < 2) {
-        await sleep(1000 + attempt * 1000);
-        return this._getJSON(url, attempt + 1);
-      }
-      const error = new Error(`LRCLIB HTTP ${status}`);
-      error.status = status;
-      throw error;
-    }
-
-    return JSON.parse(new TextDecoder().decode(bytes.get_data()));
-  }
-
-  _url(path, params) {
-    const query = Object.entries(params)
-      .map(([key, value]) => `${key}=${encodeURIComponent(value)}`)
-      .join('&');
-    return `${API}${path}?${query}`;
   }
 
   _tick() {
