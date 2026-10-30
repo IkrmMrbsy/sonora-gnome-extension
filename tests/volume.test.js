@@ -1,6 +1,6 @@
 import GLib from 'gi://GLib';
 
-import {VolumeController} from './volume.js';
+import {VolumeController} from '../src/core/volume.js';
 
 function check(condition, message) {
   if (!condition)

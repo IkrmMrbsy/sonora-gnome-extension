@@ -1,4 +1,4 @@
-import {averageColor} from './color.js';
+import {averageColor} from '../src/util/color.js';
 
 function check(condition, message) {
   if (!condition)

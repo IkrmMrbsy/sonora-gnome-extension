@@ -1,4 +1,4 @@
-import {activeLine, parseLRC} from './lrc.js';
+import {activeLine, parseLRC} from '../src/core/lrc.js';
 
 function check(condition, message) {
   if (!condition)

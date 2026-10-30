@@ -3,7 +3,7 @@ import Gtk from 'gi://Gtk';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-import {getSettings} from './config.js';
+import {getSettings} from './src/core/settings.js';
 
 const MODES = [['icon', 'Ikon saja'], ['pill', 'Cover + judul + status']];
 const POSITIONS = [['left', 'Kiri'], ['center', 'Tengah'], ['right', 'Kanan']];

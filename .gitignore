@@ -1,0 +1,12 @@
+# Build output
+schemas/gschemas.compiled
+
+# Release packages
+*.zip
+dist/
+.build/
+
+# Editor and OS noise
+*~
+*.swp
+.DS_Store

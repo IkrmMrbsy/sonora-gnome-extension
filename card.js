@@ -7,9 +7,9 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
-import {extensionDir} from './path.js';
+import {extensionDir} from './src/util/path.js';
 
-import {setArtImage} from './art.js';
+import {setArtImage} from './src/util/art.js';
 
 export const CARD_WIDTH = 360;
 export const CARD_CLOSED_WIDTH = CARD_WIDTH;

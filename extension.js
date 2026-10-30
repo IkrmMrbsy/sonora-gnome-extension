@@ -5,18 +5,18 @@ import Soup from 'gi://Soup?version=3.0';
 
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-import {averageColor} from './color.js';
+import {averageColor} from './src/util/color.js';
 import {SonoraIndicator} from './island.js';
-import {pixbufToRGBA} from './art.js';
-import {getSettings, loadConfig, watchConfig} from './config.js';
-import {activeLine, parseLRC} from './lrc.js';
-import {MicMonitor} from './mic.js';
-import {Spotify} from './mpris.js';
+import {pixbufToRGBA} from './src/util/art.js';
+import {getSettings, loadConfig, watchConfig} from './src/core/settings.js';
+import {activeLine, parseLRC} from './src/core/lrc.js';
+import {MicMonitor} from './src/core/mic.js';
+import {Spotify} from './src/core/player.js';
 import {
   addListen, addPlay, bestStreak, currentStreak, currentWeek, dayKey, emptyStats,
   normalizeStats, trackKey, weekArtists, weekTracks,
-} from './stats.js';
-import {VolumeController} from './volume.js';
+} from './src/core/stats.js';
+import {VolumeController} from './src/core/volume.js';
 
 const API = 'https://lrclib.net/api';
 const CACHE_LIMIT = 40;

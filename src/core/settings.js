@@ -1,7 +1,7 @@
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 
-import {extensionDir} from './path.js';
+import {extensionDir} from '../util/path.js';
 
 const SCHEMA = 'org.gnome.shell.extensions.spotify-ext';
 const MODES = ['icon', 'pill'];

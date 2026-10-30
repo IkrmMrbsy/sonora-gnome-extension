@@ -1,7 +1,7 @@
 import {
   addListen, addPlay, currentStreak, dayKey, emptyStats, lastNDays,
   normalizeStats, todayPlays, todaySeconds, trackKey, weekTopArtist,
-} from './stats.js';
+} from '../src/core/stats.js';
 
 function check(condition, message) {
   if (!condition)
