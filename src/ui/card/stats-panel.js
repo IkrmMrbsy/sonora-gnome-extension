@@ -1,0 +1,172 @@
+import Clutter from 'gi://Clutter';
+import GLib from 'gi://GLib';
+import St from 'gi://St';
+
+import {ellipsize, formatWeek} from '../widgets.js';
+
+const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+// The statistics drawer that opens below the card: week total, seven weekday
+// bars, and two ranked lists.
+export class StatsPanel {
+  constructor() {
+    this.actor = new St.Widget({
+      style_class: 'sonora-stats-wrap',
+      layout_manager: new Clutter.FixedLayout(),
+      height: 0,
+      clip_to_allocation: true,
+      reactive: true,
+    });
+
+    this._box = new St.BoxLayout({vertical: true, style_class: 'sonora-stats'});
+
+    const head = new St.BoxLayout({style_class: 'sonora-stats-head'});
+    this._title = new St.Label({text: 'STATISTICS', style_class: 'sonora-stats-title'});
+    this._period = new St.Label({
+      text: 'THIS WEEK',
+      style_class: 'sonora-stats-period',
+      x_expand: true,
+      x_align: Clutter.ActorAlign.END,
+    });
+    head.add_child(this._title);
+    head.add_child(this._period);
+
+    this._weekTotal = new St.Label({text: '0m', style_class: 'sonora-week-total'});
+
+    const sparkWrap = new St.BoxLayout({vertical: true, style_class: 'sonora-spark-wrap'});
+    this._spark = new St.BoxLayout({style_class: 'sonora-spark'});
+    this._sparkDays = new St.BoxLayout({style_class: 'sonora-spark-days'});
+    sparkWrap.add_child(this._spark);
+    sparkWrap.add_child(this._sparkDays);
+
+    this._grid = new St.BoxLayout({style_class: 'sonora-stats-grid', x_expand: true});
+
+    this._artistsCol = new St.BoxLayout({
+      vertical: true, style_class: 'sonora-stats-col', x_expand: true,
+    });
+    this._tracksCol = new St.BoxLayout({
+      vertical: true, style_class: 'sonora-stats-col', x_expand: true,
+    });
+
+    this._artistsList = new St.BoxLayout({vertical: true, style_class: 'sonora-stats-list'});
+    this._tracksList = new St.BoxLayout({vertical: true, style_class: 'sonora-stats-list'});
+
+    this._artistsCol.add_child(new St.Label({
+      text: 'TOP ARTISTS',
+      style_class: 'sonora-stats-coltitle',
+    }));
+    this._artistsCol.add_child(this._artistsList);
+
+    this._tracksCol.add_child(new St.Label({
+      text: 'TOP TRACKS',
+      style_class: 'sonora-stats-coltitle',
+    }));
+    this._tracksCol.add_child(this._tracksList);
+
+    this._grid.add_child(this._artistsCol);
+    this._grid.add_child(this._tracksCol);
+
+    this._activeLabel = new St.Label({text: '', style_class: 'sonora-stats-active'});
+
+    this._box.add_child(head);
+    this._box.add_child(this._weekTotal);
+    this._box.add_child(sparkWrap);
+    this._box.add_child(this._grid);
+    this._box.add_child(this._activeLabel);
+
+    this.actor.add_child(this._box);
+  }
+
+  // Position the inner box inside the drawer rectangle.
+  layout(x, y, width, height, gap) {
+    this.actor.set_position(x, y);
+    this.actor.set_size(width, height);
+
+    const innerWidth = Math.max(1, width - x * 2);
+    this._box.set_position(x, 0);
+    this._box.set_size(innerWidth, height > 0 ? height : 1);
+
+    const colWidth = Math.max(1, Math.round((innerWidth - gap) / 2));
+    this._artistsCol.set_width(colWidth);
+    this._tracksCol.set_width(colWidth);
+  }
+
+  applyAccent([r, g, b]) {
+    this._spark.set_style(`color: rgb(${r},${g},${b});`);
+  }
+
+  setStats(stats) {
+    if (!stats)
+      return;
+
+    const days = stats.days ?? [];
+    const max = Math.max(1, ...days.map(day => day.seconds));
+
+    this._weekTotal.text = formatWeek(stats.weekSeconds ?? 0);
+
+    this._spark.destroy_all_children();
+    this._sparkDays.destroy_all_children();
+
+    for (const [i, day] of days.entries()) {
+      const bar = new St.Widget({
+        style_class: 'sonora-spark-bar',
+        x_expand: true,
+        y_align: Clutter.ActorAlign.END,
+        height: day.seconds > 0 ? Math.max(3, Math.round(day.seconds / max * 34)) : 2,
+      });
+      if (day.isToday)
+        bar.add_style_class_name('today');
+      if (!(day.seconds > 0))
+        bar.add_style_class_name('empty');
+      this._spark.add_child(bar);
+
+      const label = new St.Label({
+        text: WEEKDAYS[i] ?? '',
+        style_class: 'sonora-spark-day',
+        x_expand: true,
+        x_align: Clutter.ActorAlign.CENTER,
+      });
+      if (day.isToday)
+        label.add_style_class_name('today');
+      this._sparkDays.add_child(label);
+    }
+
+    this._renderList(this._artistsList, stats.artists ?? [],
+      entry => formatWeek(entry.seconds));
+    this._renderList(this._tracksList, stats.tracks ?? [],
+      entry => `${entry.plays}\u00d7`);
+
+    const active = stats.activeDays ?? 0;
+    this._activeLabel.clutter_text.set_markup(`<b>${active} of 7</b> days active`);
+  }
+
+  _renderList(host, entries, formatValue) {
+    host.destroy_all_children();
+
+    entries.slice(0, 5).forEach((entry, i) => {
+      const row = new St.BoxLayout({style_class: 'sonora-stat-row', x_expand: true});
+
+      const rank = new St.Label({text: `${i + 1}`, style_class: 'sonora-stat-rank'});
+      rank.set_width(9);
+
+      const name = new St.Label({
+        text: entry.name ?? entry.title ?? '',
+        style_class: 'sonora-stat-name',
+        x_expand: true,
+      });
+      ellipsize(name);
+
+      const value = new St.Label({
+        text: formatValue(entry),
+        style_class: 'sonora-stat-value',
+      });
+      value.set_width(38);
+      value.set_x_align(Clutter.ActorAlign.END);
+
+      row.add_child(rank);
+      row.add_child(name);
+      row.add_child(value);
+      host.add_child(row);
+    });
+  }
+}

@@ -8,7 +8,8 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 import {setArtImage} from './src/util/art.js';
-import {formatClock, NowPlayingCard} from './card.js';
+import {formatClock} from './src/ui/widgets.js';
+import {NowPlayingCard} from './src/ui/card/index.js';
 import {extensionDir} from './src/util/path.js';
 
 const PILL_WIDTH = 240;
