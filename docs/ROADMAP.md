@@ -23,7 +23,7 @@ Hitungan "berapa kali lagu diputar" tidak bisa dipercaya. Sudah dibuktikan lewat
 | Lagu 20 detik diputar 10 kali | 10 | **0** |
 | Timer sinkronisasi tertunda (celah 5 detik) | 60 detik | **22 detik** |
 
-Penyebabnya ada empat, semuanya di `extension.js`:
+Penyebabnya ada empat, semuanya di `extension.js` (akumulasi) dan `src/core/stats.js` (model):
 
 1. `_listen.counted` hanya di-reset saat judul berubah, jadi putar ulang tidak dihitung.
 2. `_listen` dikosongkan setiap kali status bukan *Playing*, jadi jeda-lanjut membuat sesi baru.
@@ -213,6 +213,7 @@ Nomor 1–3 sebaiknya berurutan: statistik yang belum akurat tidak layak ditampi
 ## Catatan teknis yang perlu diingat
 
 - Data disimpan di `~/.local/share/spotify-ext/stats.json`. Saat ini ditulis tiap 30 detik; target 5 menit.
+- Jalur berkas di dokumen ini memakai struktur baru: `src/core/` untuk logika, `src/ui/` untuk tampilan.
 - Model data punya `version` untuk migrasi; perubahan bentuk data wajib menaikkannya.
 - Saat ini **belum ada pemangkasan**. File tumbuh selamanya — proyeksi dan rencana pemangkasan ada di poin 3.
 - `stats.artists` dan `stats.tracks` di level atas hanya ditulis, tidak pernah dibaca UI — kandidat dibuang.

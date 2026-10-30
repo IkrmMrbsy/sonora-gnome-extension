@@ -95,7 +95,7 @@ Butuh data yang cukup panjang sebelum berguna, dan rawan terasa mengarang kalau 
 | Visualizer / waveform | MPRIS tidak menyediakan spektrum; yang ada hanya animasi simulasi. Biaya CPU terus-menerus di shell. |
 | Karaoke word-level | Sumber lirik hanya menyediakan level baris. Butuh sumber dan parser baru. |
 | Vinyl berputar | Dekorasi murni. |
-| Multi-player | Mengubah arsitektur: `mpris.js` terikat ke satu bus name. |
+| Multi-player | Mengubah arsitektur: `src/core/player.js` terikat ke satu bus name. |
 | Integrasi dock | Bergantung pada ekstensi pihak ketiga yang bisa berubah sewaktu-waktu. |
 | Blur latar | GNOME Shell tidak menyediakan `backdrop-filter`; menirunya berarti render ulang tiap frame. |
 | Tema terang / kustom warna | Menambah permukaan konfigurasi besar untuk manfaat kecil. Aksen sudah mengikuti album. |

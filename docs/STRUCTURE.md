@@ -194,11 +194,57 @@ Langkah 3 paling berisiko karena `_relayout()`, `_layoutChildren()`, dan `_place
 | `dist/` wajib untuk dev | Symlink ke repo harus tetap jalan setelah `make schemas`, supaya loop pengembangan tidak butuh build |
 | TypeScript | Butuh transpile; GJS tidak punya pemeriksaan tipe bawaan dan manfaatnya belum sepadan untuk ~4.300 baris |
 
+## Status eksekusi
+
+Langkah 1–5 sudah dikerjakan di branch `restructure`. Langkah 6 (memisah CSS
+per area) sengaja belum, sesuai keputusan di atas.
+
+| Langkah | Status |
+|---|---|
+| 1. Infrastruktur | selesai |
+| 2. `core/` + `util/` | selesai |
+| 3. Pecah `card.js` | selesai |
+| 4. Pecah `island.js` | selesai |
+| 5. Pecah `extension.js` | selesai |
+| 6. Pisah CSS | ditunda |
+
+Ukuran berkas setelah eksekusi:
+
+| Berkas | Baris |
+|---|---|
+| `src/ui/card/index.js` | 643 |
+| `src/ui/indicator.js` | 591 |
+| `extension.js` | 512 |
+| `src/core/stats.js` | 248 |
+| `src/ui/card/stats-panel.js` | 172 |
+| `src/core/player.js` | 169 |
+| `src/ui/card/head.js` | 145 |
+| `src/ui/card/timer.js` | 124 |
+| `src/core/lyrics.js` | 120 |
+| `src/core/volume.js` | 109 |
+| `src/ui/card/lyrics-panel.js` | 102 |
+| `src/core/settings.js` | 93 |
+| `src/ui/card/footer.js` | 84 |
+| `src/util/color.js` | 64 |
+| `src/util/art.js` | 58 |
+| `src/ui/paint.js` | 56 |
+| `src/core/mic.js` | 52 |
+| `src/core/lrc.js` | 47 |
+| `src/ui/widgets.js` | 30 |
+| `src/util/path.js` | 24 |
+
+Catatan jujur: `card/index.js` (643) dan `indicator.js` (591) masih di atas
+target ~350. Keduanya sekarang satu tanggung jawab — orkestrasi dan geometri —
+jadi pemecahan lebih lanjut akan memisahkan hal yang memang saling terkait
+(relayout, place, event) dan menambah risiko tanpa manfaat jelas. Target
+"~350" ternyata terlalu optimistis untuk dua berkas ini; yang penting
+tanggung jawabnya sudah tunggal.
+
 ## Target akhir
 
-| Metrik | Sekarang | Sesudah |
+| Metrik | Sebelum | Sesudah |
 |---|---|---|
-| Berkas JS terbesar | 1.196 baris | ~350 baris |
+| Berkas JS terbesar | 1.196 baris | 643 baris |
 | Perintah untuk tes | 4 perintah manual | `make test` |
 | Perintah untuk rilis | manual zip | `make pack` |
 | Berkas runtime di root | 15 | 5 |

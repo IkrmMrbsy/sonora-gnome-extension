@@ -19,17 +19,27 @@ Tidak memakai Web API Spotify dan tidak butuh login. Semua data diambil dari **M
 
 ## Instalasi
 
-1. Letakkan folder ini di:
+Cara tercepat:
+
+```
+make install
+```
+
+Perintah itu mengompilasi skema, lalu membuat symlink ke folder ekstensi. Setelahnya logout dan login sekali, kemudian aktifkan:
+
+```
+gnome-extensions enable spotify-ext@ikram
+```
+
+Kalau lebih suka manual:
+
+1. Symlink folder ini ke folder ekstensi:
    ```
-   ~/.local/share/gnome-shell/extensions/spotify-ext@ikram
+   ln -s "$PWD" ~/.local/share/gnome-shell/extensions/spotify-ext@ikram
    ```
-   Symlink juga boleh, misalnya:
+2. Kompilasi skema (wajib, folder `schemas/` dibaca langsung oleh Shell):
    ```
-   ln -s /path/ke/folder-ini ~/.local/share/gnome-shell/extensions/spotify-ext@ikram
-   ```
-2. Pastikan skema sudah dikompilasi (wajib, karena folder `schemas/` dibaca langsung):
-   ```
-   glib-compile-schemas schemas/
+   make schemas
    ```
 3. Logout lalu login sekali. Di Wayland, GNOME Shell tidak bisa di-restart di tempat, dan metadata ekstensi di-cache saat startup — tanpa logout, halaman preferensi bisa belum terdeteksi.
 4. Aktifkan:
@@ -41,6 +51,8 @@ Buka pengaturan lewat **Settings → Extensions → (ekstensi ini) → ikon geri
 ```
 gnome-extensions prefs spotify-ext@ikram
 ```
+
+Untuk melepas symlink: `make uninstall`.
 
 ---
 
@@ -182,44 +194,81 @@ Setting disimpan lewat GSettings (skema `org.gnome.shell.extensions.spotify-ext`
 
 ## Struktur berkas
 
-| Berkas | Peran |
-|---|---|
-| `extension.js` | Orkestrasi: timer sinkronisasi, pengambilan lirik & art, akumulasi statistik, sleep, seek |
-| `mpris.js` | Pembungkus D-Bus: status, metadata, posisi, volume, kontrol pemutaran |
-| `island.js` | Indikator panel: mode ikon/pill, tint, slot kontekstual, hover timer |
-| `card.js` | Kartu now-playing: layout, panah, animasi, progress, footer |
-| `art.js` | Konversi pixbuf → RGBA dan pemasangan album art ke aktor |
-| `color.js` | Perhitungan warna aksen dari album art |
-| `lrc.js` | Parser LRC dan pencarian baris aktif |
-| `stats.js` | Model statistik: bucket harian, streak, top artist |
-| `volume.js` | Fade volume untuk ducking dan sleep |
-| `mic.js` | Deteksi mikrofon aktif lewat `Gvc` |
-| `config.js` | Pembungkus GSettings + migrasi config lama |
-| `prefs.js` | Halaman preferensi (GTK4 + libadwaita) |
-| `path.js` | Utilitas path direktori ekstensi |
-| `schemas/` | Skema GSettings dan hasil kompilasinya |
-| `icons/` | Ikon tambahan (api untuk streak) |
-| `stylesheet.css` | Gaya tampilan |
-| `mockup/` | Mockup HTML untuk eksplorasi desain (bukan bagian runtime) |
-| `dev/` | Pemutar MPRIS palsu untuk pengujian |
+```
+sonora/
+├── metadata.json              # wajib di root (dibaca Shell saat startup)
+├── extension.js               # wajib di root, entry point
+├── prefs.js                   # wajib di root, halaman preferensi
+├── stylesheet.css             # wajib di root, satu-satunya CSS yang dimuat
+├── schemas/                   # skema GSettings
+│
+├── src/
+│   ├── core/                  # logika, tanpa St/Clutter
+│   │   ├── player.js          # pembungkus D-Bus MPRIS
+│   │   ├── lyrics.js          # client lrclib + cache
+│   │   ├── lrc.js             # parser LRC
+│   │   ├── stats.js           # model statistik + agregasi mingguan
+│   │   ├── settings.js        # GSettings + migrasi config lama
+│   │   ├── volume.js          # fade, duck, pause-for-mic
+│   │   └── mic.js             # deteksi mikrofon (Gvc)
+│   │
+│   ├── ui/
+│   │   ├── indicator.js       # indikator panel (ikon/pill)
+│   │   ├── widgets.js         # format waktu, ellipsize, tombol ikon
+│   │   ├── paint.js           # tint radial, panah, clip membulat
+│   │   └── card/
+│   │       ├── index.js       # orkestrasi kartu, layout, event
+│   │       ├── head.js        # cover, judul, kontrol, repeat
+│   │       ├── timer.js       # durasi + progress yang bisa digeser
+│   │       ├── footer.js      # this week + streak
+│   │       ├── lyrics-panel.js
+│   │       └── stats-panel.js
+│   │
+│   └── util/
+│       ├── art.js             # pixbuf → RGBA, pemasangan album art
+│       ├── color.js           # warna aksen dari album art
+│       └── path.js            # resolusi folder ekstensi
+│
+├── tests/                     # tes unit, satu runner
+├── dev/                       # pemutar MPRIS palsu + skrip nested shell
+├── icons/                     # ikon tambahan (api, bulan)
+└── docs/                      # IDEAS.md, ROADMAP.md, STRUCTURE.md, mockup/
+```
+
+Alasan pemecahan ini, termasuk batasan yang tidak bisa dilanggar GNOME Shell, ada di [`docs/STRUCTURE.md`](docs/STRUCTURE.md).
+
+Prinsipnya: `src/core/` bebas dari `St`/`Clutter` sehingga bisa diuji tanpa menjalankan Shell, sedangkan `src/ui/` boleh bergantung penuh pada Shell.
 
 ---
 
-## Pengembangan
+## Perintah
 
-**Tes unit** (tanpa GNOME Shell, cukup `gjs`):
-```
-gjs -m test-lrc.js
-gjs -m test-color.js
-gjs -m test-stats.js
-gjs -m test-volume.js
-```
+Semua perintah pengembangan lewat `Makefile`:
 
-**Uji di shell bersarang** (tidak mengganggu sesi utama):
+| Perintah | Kegunaan |
+|---|---|
+| `make` | `lint` + `test` + `schemas` sekaligus |
+| `make schemas` | Kompilasi `schemas/gschemas.compiled` (wajib sebelum jalan pertama kali) |
+| `make lint` | Periksa sintaks semua berkas JavaScript |
+| `make test` | Jalankan semua tes di `tests/` |
+| `make install` | Symlink ke folder ekstensi + kompilasi skema |
+| `make uninstall` | Hapus symlink |
+| `make pack` | Buat `dist/sonora.zip` untuk rilis |
+| `make nested` | Jalankan shell bersarang dengan pemutar palsu |
+| `make clean` | Hapus artefak build |
+| `make help` | Daftar perintah |
+
+**Tes** dijalankan lewat satu pintu:
 ```
-dbus-run-session -- bash -c './dev/fake-spotify.js & gnome-shell --nested --wayland'
+make test
 ```
-`dev/fake-spotify.js` meniru pemutar MPRIS: tiga lagu, posisi berjalan otomatis, dan merespons Play/Pause/Next/Previous/SetPosition/Volume.
+Setiap berkas `tests/*.test.js` dijalankan di proses `gjs` sendiri, jadi tes yang memakai main loop tidak mengganggu tes lain.
+
+**Shell bersarang** (tidak mengganggu sesi utama):
+```
+make nested
+```
+`dev/fake-spotify.js` meniru pemutar MPRIS: tiga lagu, posisi berjalan otomatis, serta merespons Play/Pause/Next/Previous/SetPosition/Volume/LoopStatus.
 
 **Muat ulang setelah mengubah kode:**
 ```
@@ -230,7 +279,7 @@ Setelah mengubah `metadata.json` atau menambah key skema, logout/login diperluka
 
 **Log:**
 ```
-journalctl --user -f | grep -i spotify-ext
+journalctl --user -f | grep -i sonora
 ```
 
 ---
