@@ -6,7 +6,7 @@ import Soup from 'gi://Soup?version=3.0';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import {averageColor} from './src/util/color.js';
-import {SonoraIndicator} from './island.js';
+import {SonoraIndicator} from './src/ui/indicator.js';
 import {pixbufToRGBA} from './src/util/art.js';
 import {getSettings, loadConfig, watchConfig} from './src/core/settings.js';
 import {activeLine, parseLRC} from './src/core/lrc.js';

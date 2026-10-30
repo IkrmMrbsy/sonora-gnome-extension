@@ -1,4 +1,3 @@
-import Cairo from 'gi://cairo';
 import Clutter from 'gi://Clutter';
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
@@ -7,10 +6,11 @@ import St from 'gi://St';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
-import {setArtImage} from './src/util/art.js';
-import {formatClock} from './src/ui/widgets.js';
-import {NowPlayingCard} from './src/ui/card/index.js';
-import {extensionDir} from './src/util/path.js';
+import {setArtImage} from '../util/art.js';
+import {drawRadialTint, roundedClip, surfaceScale} from './paint.js';
+import {formatClock} from './widgets.js';
+import {NowPlayingCard} from './card/index.js';
+import {extensionDir} from '../util/path.js';
 
 const PILL_WIDTH = 240;
 const PILL_HEIGHT = 26;
@@ -347,38 +347,21 @@ export class SonoraIndicator {
     if (!width || !height)
       return;
 
-    const [surfaceWidth] = area.get_surface_size();
-    const scale = surfaceWidth && width ? surfaceWidth / width : 1;
-    const [r, g, b] = this._accent;
+    const scale = surfaceScale(area, width);
 
     // Origin on the left edge behind the cover, fading out by ~55% so the
-    // chip end stays dark. The old centre-under-cover origin hid the dense
-    // part of the gradient behind the opaque art.
-    const cx = 0;
-    const cy = height * 0.5 * scale;
-    const radius = width * 0.55 * scale;
-
-    // St clips children to the allocation rect, not the border radius, so
+    // chip end stays dark.
+    //
+    // St clips children to the allocation rect, not the border radius, so we
     // clip here or the tint bleeds into the pill's rounded corners.
-    this._roundedClip(cr, width * scale, height * scale, 13 * scale);
+    roundedClip(cr, width * scale, height * scale, 13 * scale);
 
-    const gradient = new Cairo.RadialGradient(cx, cy, 0, cx, cy, radius);
-    gradient.addColorStopRGBA(0, r / 255, g / 255, b / 255, 0.50);
-    gradient.addColorStopRGBA(0.55, r / 255, g / 255, b / 255, 0.16);
-    gradient.addColorStopRGBA(1, r / 255, g / 255, b / 255, 0);
-    cr.setSource(gradient);
-    cr.paint();
-  }
-
-  _roundedClip(cr, width, height, radius) {
-    const r = Math.min(radius, width / 2, height / 2);
-    cr.newPath();
-    cr.arc(r, r, r, Math.PI, 1.5 * Math.PI);
-    cr.arc(width - r, r, r, 1.5 * Math.PI, 2 * Math.PI);
-    cr.arc(width - r, height - r, r, 0, 0.5 * Math.PI);
-    cr.arc(r, height - r, r, 0.5 * Math.PI, Math.PI);
-    cr.closePath();
-    cr.clip();
+    drawRadialTint(cr, width, height, this._accent, {
+      scale,
+      originX: 0,
+      originY: 0.5,
+      radiusFactor: 0.55,
+    });
   }
 
   _applyAccent() {
