@@ -1,6 +1,8 @@
-# Ekstensi Now-Playing untuk GNOME Shell
+# Sonora
 
-Ekstensi GNOME Shell 50 yang menampilkan lagu Spotify yang sedang diputar langsung di panel atas. Ringkasnya: satu indikator di panel, satu kartu yang muncul saat di-hover, berisi album art, lirik tersinkron, kontrol pemutaran, dan ringkasan kebiasaan mendengarkan.
+**The music companion for GNOME.**
+
+Ekstensi GNOME Shell 50 yang menampilkan lagu Spotify yang sedang diputar langsung di panel atas, dengan lirik tersinkron, kontrol pemutaran, dan statistik mendengarkan.
 
 Tidak memakai Web API Spotify dan tidak butuh login. Semua data diambil dari **MPRIS** (`org.mpris.MediaPlayer2.spotify`) di D-Bus session, jadi apa pun yang sedang diputar Spotify akan terbaca — termasuk kontrol play/pause/next/previous/seek lewat D-Bus.
 
@@ -77,10 +79,24 @@ Isi kartu:
 
 - **Album art 64px** dengan sudut membulat. Klik dua kali untuk membuka Spotify.
 - **Judul + artis · album**, dipotong dengan elipsis bila panjang.
-- **Kontrol** previous / play-pause / next.
-- **Lirik** dua baris: baris aktif dan baris berikutnya.
-- **Progress bar 3px** — isi dari kiri ke kanan, bisa diklik atau di-drag untuk seek.
+- **Kontrol** previous / play-pause / next / repeat. Repeat bersiklus mati → semua lagu → satu lagu, dan ditulis ke pemutar lewat `LoopStatus` sehingga tetap tersimpan di Spotify.
+- **Baris waktu** `1:23 ──────── 3:20`. Garisnya bisa diklik atau di-drag untuk lompat; tombol ← → bekerja saat garis difokuskan.
 - **Footer** satu baris: `This week 3h 12m · top Nama Artis`, lalu di kanan `🔥 5d` (streak berjalan) dan `best 12d` (streak terpanjang).
+
+### Dua laci yang bisa dibuka
+
+Kartu punya dua sisi yang bisa dibuka tanpa menggeser isi utamanya:
+
+| Laci | Arah | Isi |
+|---|---|---|
+| **Lirik** | melebar ke kanan | 5 baris lirik di sekitar baris aktif |
+| **Statistik** | melebar ke bawah | total minggu ini, 7 batang hari, top 5 artis (menit), top 5 lagu (jumlah putar), hari aktif |
+
+Keduanya berperilaku sama: **klik untuk membuka**, klik lagi atau `Esc` untuk menutup. Tidak ada pratinjau saat kursor lewat — laci hanya terbuka kalau memang diminta, jadi tidak ada panel yang tiba-tiba melebar saat kursor melintas.
+
+Membuka salah satu tidak mengubah ukuran yang lain; membuka keduanya membuat laci statistik melebar mengikuti lebar kartu, sehingga tidak ada ruang kosong di sisi kanan.
+
+Saat laci terbuka, `Esc` menutup laci dulu; `Esc` sekali lagi menutup kartu.
 
 Kartu bisa muncul di mode ikon maupun mode pill, diposisikan mengikuti indikator dengan panah kecil yang menunjuk ke arahnya, dan dijepit agar tidak keluar dari monitor.
 
@@ -110,9 +126,19 @@ Sisa waktu tampil sebagai hitung mundur di slot pill dan bisa dibatalkan dengan 
 
 ---
 
-## Ducking mikrofon
+## Mikrofon
 
-Kalau ada aplikasi yang memakai mikrofon, volume musik diturunkan ke 30% secara bertahap (400ms), lalu dikembalikan (600ms) saat mikrofon tidak dipakai lagi. Deteksi memakai `Gvc` (daftar source output). Bisa dimatikan dari preferensi; kalau `Gvc` tidak tersedia, fitur ini otomatis tidak aktif tanpa mengganggu fitur lain.
+Tiga pilihan perilaku saat ada aplikasi lain memakai mikrofon:
+
+| Mode | Perilaku |
+|---|---|
+| **Jangan ganggu** | tidak melakukan apa pun |
+| **Kecilkan volume** | volume diturunkan bertahap (400ms) ke persentase pilihan (10%–70%), lalu dipulihkan (600ms) saat mikrofon bebas |
+| **Jeda sampai mikrofon selesai** | pemutaran dijeda, lalu dilanjutkan otomatis setelah mikrofon bebas |
+
+Mode jeda hanya melanjutkan pemutaran kalau ekstensi yang menjedakannya — kalau musik memang sudah dijeda sebelumnya, musik tidak akan tiba-tiba berputar setelah rapat selesai.
+
+Deteksi memakai `Gvc` (daftar source output). Kalau `Gvc` tidak tersedia, fitur ini mati diam-diam tanpa mengganggu fitur lain.
 
 ---
 
@@ -143,9 +169,12 @@ Definisi "satu putaran" mengikuti ambang 30 detik seperti Spotify: sebuah lagu d
 |---|---|---|
 | Indikator panel | Ikon saja / Cover + judul + status | berlaku langsung |
 | Posisi | Kiri / Tengah / Kanan | berlaku langsung |
-| Tampilkan lirik | on / off | kartu mengecil saat off |
-| Kecilkan musik saat mikrofon dipakai | on / off | — |
+| Kartu terbuka | Saat kursor diarahkan / Hanya saat diklik / Keduanya | mode klik menutup kartu saat diklik ulang |
+| Jeda sebelum terbuka | 0–2000 ms | hanya berlaku untuk mode kursor |
+| Tampilkan lirik | on / off | tombol lirik di kartu ikut disembunyikan |
 | Sleep timer | Nonaktif / 15 / 30 / 45 / 60 menit | langsung meng-arm timer |
+| Saat mikrofon dipakai | Jangan ganggu / Kecilkan volume / Jeda sampai mikrofon selesai | — |
+| Volume saat dikecilkan | 10%–70% | aktif hanya pada mode "Kecilkan volume" |
 
 Setting disimpan lewat GSettings (skema `org.gnome.shell.extensions.spotify-ext`), sehingga bisa diubah dari preferensi, `gsettings`, atau `dconf`. Kalau ada file `config.json` lama dari versi sebelumnya, isinya dimigrasikan otomatis sekali saat pertama dijalankan.
 

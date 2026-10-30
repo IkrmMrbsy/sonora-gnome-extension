@@ -1,6 +1,6 @@
-/* Cadence — panel indicator + now-playing card */
+/* Sonora — panel indicator + now-playing card */
 
-.cadence-button {
+.sonora-button {
   -natural-hpadding: 0px;
   -minimum-hpadding: 0px;
 }
@@ -8,24 +8,24 @@
 /* Pill fills the whole panel height: the panel button's themed 3px
    transparent border is the gap that made it look small. Icon mode keeps
    the default border so its geometry does not change. */
-.cadence-button.cadence-mode-pill {
+.sonora-button.sonora-mode-pill {
   border-width: 0px;
 }
 
 /* ---------- panel: icon mode ---------- */
 
-.cadence-icon-box {
+.sonora-icon-box {
   margin-right: 6px;
   border-radius: 12px;
 }
 
-.cadence-button:hover .cadence-icon-box {
+.sonora-button:hover .sonora-icon-box {
   background-color: rgba(255, 255, 255, 0.12);
 }
 
 /* ---------- panel: pill mode ---------- */
 
-.cadence-pill {
+.sonora-pill {
   margin-right: 6px;
   padding: 0px;
   border: 1px solid rgba(255, 255, 255, 0.10);
@@ -33,29 +33,29 @@
   background-color: rgba(13, 13, 18, 0.88);
 }
 
-.cadence-button:hover .cadence-pill {
+.sonora-button:hover .sonora-pill {
   background-color: rgba(255, 255, 255, 0.13);
 }
 
-.cadence-pill-row {
+.sonora-pill-row {
   spacing: 6px;
   padding: 0 10px;
 }
 
-.cadence-cover {
+.sonora-cover {
   border-radius: 5px;
   background-color: rgba(255, 255, 255, 0.10);
 }
 
-.cadence-title {
+.sonora-title {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   color: #f4f2ef;
 }
 
 /* ---------- pill slot: countdown or sleep/duck state ---------- */
 
-.cadence-slot {
+.sonora-slot {
   spacing: 4px;
   padding: 0 2px;
   border: 1px solid transparent;
@@ -64,129 +64,172 @@
   color: rgba(244, 242, 239, 0.60);
 }
 
-.cadence-slot-text {
+.sonora-slot-text {
   font-size: 11px;
-  font-weight: 600;
+  font-weight: 700;
   font-feature-settings: "tnum";
   color: #f4f2ef;
 }
 
-.cadence-slot-icon {
+.sonora-slot-icon {
   color: rgba(244, 242, 239, 0.95);
 }
 
 /* State chip (sleep / duck) is the only variant with a surface. */
-.cadence-slot.is-state {
+.sonora-slot.is-state {
   padding: 2px 7px;
   color: #f4f2ef;
 }
 
-.cadence-pill.paused .cadence-slot-text {
+.sonora-pill.paused .sonora-slot-text {
   color: rgba(244, 242, 239, 0.55);
 }
 
-.cadence-pill.paused .cadence-slot-icon {
+.sonora-pill.paused .sonora-slot-icon {
   opacity: 0.55;
 }
 
-.cadence-pill.paused .cadence-title {
+.sonora-pill.paused .sonora-title {
   color: rgba(244, 242, 239, 0.55);
 }
 
 /* ---------- now-playing card ---------- */
 
-.cadence-card {
+.sonora-card {
   background-color: rgba(13, 13, 18, 0.94);
   border-radius: 18px;
 }
 
-.cadence-head {
-  spacing: 12px;
+.sonora-card-box {
+  spacing: 0px;
 }
 
-.cadence-art {
-  border-radius: 11px;
+.sonora-cols {
+  spacing: 0px;
+}
+
+.sonora-head {
+  spacing: 10px;
+}
+
+.sonora-art {
+  border-radius: 14px;
   background-color: rgba(255, 255, 255, 0.08);
 }
 
-.cadence-info {
+.sonora-info {
   spacing: 2px;
 }
 
-.cadence-song {
+.sonora-song {
   font-size: 14px;
   font-weight: 700;
   color: #f4f2ef;
 }
 
-.cadence-artist {
+.sonora-artist {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.55);
 }
 
-.cadence-controls {
-  spacing: 12px;
+.sonora-card-box.paused .sonora-song,
+.sonora-card-box.paused .sonora-artist {
+  color: rgba(244, 242, 239, 0.55);
 }
 
-.cadence-btn {
-  min-width: 26px;
-  min-height: 26px;
+.sonora-controls {
+  spacing: 6px;
+}
+
+.sonora-btn {
+  width: 24px;
+  height: 24px;
   padding: 0;
   border: 0;
-  border-radius: 13px;
+  border-radius: 8px;
   background-color: transparent;
   color: rgba(255, 255, 255, 0.62);
 }
 
-.cadence-btn:hover {
+.sonora-btn:hover {
   background-color: rgba(255, 255, 255, 0.12);
   color: #ffffff;
 }
 
-.cadence-play {
-  min-width: 30px;
-  min-height: 30px;
+.sonora-play {
+  width: 28px;
+  height: 28px;
   padding: 0;
   border: 0;
-  border-radius: 15px;
+  border-radius: 14px;
   background-color: #ffffff;
   color: #111111;
 }
 
-.cadence-play:hover {
+.sonora-play:hover {
   background-color: #f0f0f0;
 }
 
-.cadence-lyrics {
-  margin-top: 10px;
+.sonora-repeat {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background-color: transparent;
+  color: rgba(255, 255, 255, 0.45);
 }
 
-.cadence-lyric {
-  font-size: 15px;
-  font-weight: 700;
-  color: #f4f2ef;
+.sonora-repeat:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
 }
 
-.cadence-next {
-  margin-top: 4px;
-  font-size: 11.5px;
-  color: rgba(255, 255, 255, 0.32);
+.sonora-repeat.on {
+  color: #ffffff;
 }
 
-.cadence-progress {
-  margin-top: 12px;
+/* ---------- timer row ---------- */
+
+.sonora-timerow {
+  spacing: 8px;
+  margin-top: 11px;
+}
+
+.sonora-time {
+  width: 30px;
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.40);
+}
+
+.sonora-time-end {
+  text-align: right;
+}
+
+.sonora-bar {
+}
+
+.sonora-bar-track {
   border-radius: 2px;
   background-color: rgba(255, 255, 255, 0.14);
 }
 
-.cadence-fill {
+.sonora-bar-fill {
   border-radius: 2px;
   background-gradient-direction: horizontal;
   background-gradient-start: #ffffff;
   background-gradient-end: rgba(255, 255, 255, 0.75);
 }
 
-.cadence-foot {
+.sonora-bar-knob {
+  border-radius: 5px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+}
+
+/* ---------- footer ---------- */
+
+.sonora-foot {
   margin-top: 10px;
   padding-top: 9px;
   spacing: 6px;
@@ -195,37 +238,239 @@
   color: rgba(255, 255, 255, 0.48);
 }
 
-.cadence-foot-icon {
+.sonora-foot-icon {
   color: #3584e4;
 }
 
-.cadence-foot-label {
+.sonora-foot-label {
   font-size: 11px;
   color: rgba(255, 255, 255, 0.48);
 }
 
-.cadence-foot-stats {
+.sonora-foot-stats {
   spacing: 10px;
 }
 
-.cadence-streak {
+.sonora-streak {
   spacing: 4px;
 }
 
-.cadence-streak-label {
+.sonora-streak-label {
   font-size: 11px;
   font-weight: 700;
   color: #f4f2ef;
 }
 
-.cadence-best-label {
+.sonora-best-label {
   padding-left: 10px;
   border-left: 1px solid rgba(255, 255, 255, 0.10);
   font-size: 11px;
   color: rgba(255, 255, 255, 0.40);
 }
 
-.cadence-card-box.paused .cadence-song,
-.cadence-card-box.paused .cadence-artist {
-  color: rgba(244, 242, 239, 0.55);
+/* ---------- lyrics drawer (opens to the right) ---------- */
+
+.sonora-lyrics-panel {
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+.sonora-lyrics-inner {
+  spacing: 1px;
+  padding: 0px;
+}
+
+.sonora-lyric-line {
+  padding: 5px 0px;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.30);
+}
+
+.sonora-lyric-line.near {
+  color: rgba(255, 255, 255, 0.46);
+}
+
+.sonora-lyric-line.active {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f4f2ef;
+}
+
+.sonora-lyric-line.past {
+  color: rgba(255, 255, 255, 0.22);
+}
+
+.sonora-lyrics-empty {
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.32);
+  text-align: center;
+}
+
+/* ---------- stats drawer (opens downward) ---------- */
+
+/* No border here: the divider belongs to the padded inner box so it lines up
+   with the footer rule instead of running edge to edge. */
+.sonora-stats-wrap {
+  background-color: rgba(255, 255, 255, 0.015);
+}
+
+.sonora-stats {
+  spacing: 9px;
+}
+
+.sonora-stats-head {
+  spacing: 8px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.sonora-stats-title {
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: rgba(244, 242, 239, 0.66);
+}
+
+.sonora-stats-period {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.30);
+}
+
+.sonora-week-total {
+  font-size: 20px;
+  font-weight: 700;
+  color: #f4f2ef;
+}
+
+.sonora-spark-wrap {
+  spacing: 3px;
+}
+
+.sonora-spark {
+  spacing: 6px;
+  height: 34px;
+}
+
+.sonora-spark-bar {
+  border-radius: 2px;
+  background-color: rgba(255, 255, 255, 0.13);
+}
+
+.sonora-spark-bar.today {
+  background-color: #ffffff;
+}
+
+.sonora-spark-bar.empty {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.sonora-spark-days {
+  spacing: 6px;
+}
+
+.sonora-spark-day {
+  font-size: 8.5px;
+  color: rgba(255, 255, 255, 0.26);
+}
+
+.sonora-spark-day.today {
+  color: rgba(244, 242, 239, 0.80);
+  font-weight: 700;
+}
+
+.sonora-stats-grid {
+  spacing: 14px;
+  margin-top: 6px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sonora-stats-col {
+  spacing: 4px;
+}
+
+.sonora-stat-row {
+  spacing: 5px;
+}
+
+.sonora-stats-coltitle {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.34);
+}
+
+.sonora-stats-list {
+  spacing: 2px;
+}
+
+.sonora-stat-row {
+  spacing: 5px;
+}
+
+.sonora-stat-rank {
+  font-size: 8.5px;
+  color: rgba(255, 255, 255, 0.26);
+}
+
+.sonora-stat-name {
+  font-size: 10px;
+  color: rgba(244, 242, 239, 0.82);
+  text-align: left;
+}
+
+.sonora-stat-value {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.34);
+  text-align: right;
+}
+
+.sonora-stats-active {
+  font-size: 9.5px;
+  color: rgba(255, 255, 255, 0.34);
+  margin-top: 4px;
+}
+
+/* ---------- drawer affordances ---------- */
+
+.sonora-tab {
+  min-width: 18px;
+  min-height: 56px;
+  padding: 0px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background-color: rgba(20, 20, 26, 0.94);
+  color: rgba(244, 242, 239, 0.66);
+}
+
+.sonora-tab:hover {
+  color: #ffffff;
+}
+
+.sonora-tab.active {
+  color: #ffffff;
+}
+
+.sonora-tab-icon {
+}
+
+.sonora-stab {
+  min-width: 56px;
+  min-height: 18px;
+  padding: 0px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 9px;
+  background-color: rgba(20, 20, 26, 0.94);
+  color: rgba(244, 242, 239, 0.66);
+}
+
+.sonora-stab:hover {
+  color: #ffffff;
+}
+
+.sonora-stab.active {
+  color: #ffffff;
+}
+
+.sonora-stab-icon {
 }

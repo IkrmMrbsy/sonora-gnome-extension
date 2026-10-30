@@ -22,6 +22,8 @@ const XML = `
     <property name="Metadata" type="a{sv}" access="read"/>
     <property name="Position" type="x" access="read"/>
     <property name="Volume" type="d" access="readwrite"/>
+    <property name="LoopStatus" type="s" access="readwrite"/>
+    <property name="Shuffle" type="b" access="readwrite"/>
   </interface>
   <interface name="org.mpris.MediaPlayer2">
     <property name="Identity" type="s" access="read"/>
@@ -57,6 +59,8 @@ let index = 0;
 let position = 0;
 let playing = true;
 let volume = 0.8;
+let loopStatus = 'None';
+let shuffle = false;
 let positionReads = 0;
 
 function metadata() {
@@ -83,6 +87,10 @@ function property(name) {
     return new GLib.Variant('x', position);
   case 'Volume':
     return new GLib.Variant('d', volume);
+  case 'LoopStatus':
+    return new GLib.Variant('s', loopStatus);
+  case 'Shuffle':
+    return new GLib.Variant('b', shuffle);
   case 'Identity':
     return new GLib.Variant('s', 'Fake Spotify');
   case 'CanQuit':
@@ -130,12 +138,25 @@ function onGetProperty(connection, sender, path, iface, name) {
 }
 
 function onSetProperty(connection, sender, path, iface, name, value) {
-  if (name !== 'Volume')
-    return false;
+  if (name === 'Volume') {
+    volume = value.deepUnpack();
+    print(`fake-spotify: volume -> ${volume.toFixed(2)}`);
+    return true;
+  }
 
-  volume = value.deepUnpack();
-  print(`fake-spotify: volume -> ${volume.toFixed(2)}`);
-  return true;
+  if (name === 'LoopStatus') {
+    loopStatus = value.deepUnpack();
+    print(`fake-spotify: loop -> ${loopStatus}`);
+    return true;
+  }
+
+  if (name === 'Shuffle') {
+    shuffle = value.deepUnpack();
+    print(`fake-spotify: shuffle -> ${shuffle}`);
+    return true;
+  }
+
+  return false;
 }
 
 function onBusAcquired(connection) {
@@ -158,9 +179,14 @@ GLib.timeout_add(GLib.PRIORITY_DEFAULT, 1000, () => {
   if (playing) {
     position += 1000000;
     if (position >= TRACKS[index].duration * 1000000) {
-      index = (index + 1) % TRACKS.length;
-      position = 0;
-      print(`fake-spotify: next track ${TRACKS[index].title}`);
+      if (loopStatus === 'Track') {
+        position = 0;
+        print(`fake-spotify: loop track ${TRACKS[index].title}`);
+      } else {
+        index = (index + 1) % TRACKS.length;
+        position = 0;
+        print(`fake-spotify: next track ${TRACKS[index].title}`);
+      }
     }
   }
   return GLib.SOURCE_CONTINUE;

@@ -16,7 +16,7 @@ addListen(stats, {artist: 'B', title: 'T2', seconds: 120, day: '2026-10-27'});
 check(stats.total === 210, 'total seconds');
 check(stats.days['2026-10-28'].seconds === 90, 'day bucket');
 check(stats.days['2026-10-28'].artists.A === 90, 'day artist bucket');
-check(stats.days['2026-10-28'].tracks[trackKey('A', 'T1')] === 90, 'day track bucket');
+check(stats.days['2026-10-28'].tracks[trackKey('A', 'T1')].seconds === 90, 'day track seconds');
 check(stats.tracks[trackKey('A', 'T1')].seconds === 90, 'track seconds');
 check(stats.artists.A === 90 && stats.artists.B === 120, 'artist seconds');
 
@@ -27,6 +27,8 @@ check(stats.days['2026-10-28'].seconds === 105, 'ads count toward the day');
 
 addPlay(stats, {artist: 'A', title: 'T1', day: '2026-10-28'});
 check(stats.tracks[trackKey('A', 'T1')].plays === 1, 'play count');
+check(stats.days['2026-10-28'].tracks[trackKey('A', 'T1')].plays === 1,
+  'day track plays');
 check(stats.days['2026-10-28'].plays === 1, 'day play count');
 
 check(currentStreak({'2026-10-28': 10, '2026-10-27': 5, '2026-10-25': 5},

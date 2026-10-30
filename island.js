@@ -1,5 +1,6 @@
 import Cairo from 'gi://cairo';
 import Clutter from 'gi://Clutter';
+import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 
@@ -8,13 +9,15 @@ import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 import {setArtImage} from './art.js';
 import {formatClock, NowPlayingCard} from './card.js';
+import {extensionDir} from './path.js';
 
 const PILL_WIDTH = 240;
 const PILL_HEIGHT = 26;
 const PILL_TITLE = 116;
-const ROLE = 'cadence';
+const ROLE = 'sonora';
+const MOON_ICON = 'icons/sonora-moon-symbolic.svg';
 
-export class CadenceIndicator {
+export class SonoraIndicator {
   constructor(config, callbacks = {}) {
     this._config = config;
     this._callbacks = callbacks;
@@ -42,6 +45,7 @@ export class CadenceIndicator {
       onNext: callbacks.onNext,
       onPrev: callbacks.onPrev,
       onSeek: callbacks.onSeek,
+      onRepeat: callbacks.onRepeat,
       onOpenSpotify: callbacks.onOpenSpotify,
       onEnter: () => this._cancelClose(),
       onLeave: () => this._scheduleClose(),
@@ -55,8 +59,13 @@ export class CadenceIndicator {
   }
 
   _buildPanel() {
-    this._button = new PanelMenu.Button(0.0, 'Cadence', true);
-    this._button.add_style_class_name('cadence-button');
+    this._button = new PanelMenu.Button(0.0, 'Sonora', true);
+    this._button.add_style_class_name('sonora-button');
+    // Shell teardown destroys actors without calling disable(), so the 1s
+    // timer would still poke disposed widgets. Stop as soon as we go away.
+    this._button.connect('destroy', () => {
+      this._destroyed = true;
+    });
 
     this._panelBox = new St.BoxLayout({
       vertical: false,
@@ -65,7 +74,7 @@ export class CadenceIndicator {
     this._button.add_child(this._panelBox);
 
     this._iconBox = new St.Widget({
-      style_class: 'cadence-icon-box',
+      style_class: 'sonora-icon-box',
       layout_manager: new Clutter.BinLayout(),
       width: 28,
       height: 24,
@@ -73,7 +82,7 @@ export class CadenceIndicator {
     this._panelIcon = new St.Icon({
       icon_name: 'audio-x-generic-symbolic',
       icon_size: 14,
-      style_class: 'cadence-panel-icon',
+      style_class: 'sonora-panel-icon',
       x_align: Clutter.ActorAlign.CENTER,
       y_align: Clutter.ActorAlign.CENTER,
     });
@@ -82,7 +91,7 @@ export class CadenceIndicator {
     // FixedLayout, not BinLayout: BinLayout centres children and ignores
     // x_expand, so the row never filled the pill and the pill grew past 240.
     this._pillBox = new St.Widget({
-      style_class: 'cadence-pill',
+      style_class: 'sonora-pill',
       layout_manager: new Clutter.FixedLayout(),
       width: PILL_WIDTH,
       height: PILL_HEIGHT,
@@ -94,16 +103,17 @@ export class CadenceIndicator {
     this._pillBox.add_child(this._pillTint);
 
     this._pillRow = new St.BoxLayout({
-      style_class: 'cadence-pill-row',
+      style_class: 'sonora-pill-row',
       x_expand: true,
       y_align: Clutter.ActorAlign.CENTER,
     });
     this._pillBox.add_child(this._pillRow);
 
     this._pillCover = new St.Widget({
-      style_class: 'cadence-cover',
+      style_class: 'sonora-cover',
       width: 18,
       height: 18,
+      y_align: Clutter.ActorAlign.CENTER,
       clip_to_allocation: true,
     });
 
@@ -111,7 +121,7 @@ export class CadenceIndicator {
 
     this._pillTitle = new St.Label({
       text: 'Nothing playing',
-      style_class: 'cadence-title',
+      style_class: 'sonora-title',
       width: PILL_TITLE,
       y_align: Clutter.ActorAlign.CENTER,
     });
@@ -120,19 +130,19 @@ export class CadenceIndicator {
     this._pillSpacer = new St.Widget({x_expand: true});
 
     this._pillSlot = new St.BoxLayout({
-      style_class: 'cadence-slot is-action',
+      style_class: 'sonora-slot is-action',
       y_align: Clutter.ActorAlign.CENTER,
     });
     this._pillSlotIcon = new St.Icon({
-      icon_name: 'night-light-symbolic',
+      gicon: Gio.icon_new_for_string(`${extensionDir()}/${MOON_ICON}`),
       icon_size: 13,
-      style_class: 'cadence-slot-icon',
+      style_class: 'sonora-slot-icon',
       y_align: Clutter.ActorAlign.CENTER,
       visible: false,
     });
     this._pillSlotText = new St.Label({
       text: '',
-      style_class: 'cadence-slot-text',
+      style_class: 'sonora-slot-text',
       y_align: Clutter.ActorAlign.CENTER,
     });
     this._pillSlot.add_child(this._pillSlotIcon);
@@ -148,7 +158,8 @@ export class CadenceIndicator {
 
     this._button.connect('enter-event', () => {
       this._insideButton = true;
-      this._scheduleOpen();
+      if (this._cardOpenMode() !== 'click')
+        this._scheduleOpen();
       return Clutter.EVENT_PROPAGATE;
     });
     this._button.connect('leave-event', () => {
@@ -157,10 +168,23 @@ export class CadenceIndicator {
       return Clutter.EVENT_PROPAGATE;
     });
     this._button.connect('button-release-event', (actor, event) => {
-      if (event.get_button() === 1)
+      if (event.get_button() !== 1)
+        return Clutter.EVENT_PROPAGATE;
+
+      if (this._cardOpenMode() === 'click') {
+        if (this._card?.isOpen())
+          this._card.close();
+        else
+          this._openCard();
+      } else {
         this._openCard();
+      }
       return Clutter.EVENT_PROPAGATE;
     });
+  }
+
+  _cardOpenMode() {
+    return this._config.cardOpen ?? 'hover';
   }
 
   _openCard() {
@@ -173,7 +197,8 @@ export class CadenceIndicator {
       return;
 
     this._cancelOpen();
-    this._openTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 400, () => {
+    const delay = Math.max(0, this._config.hoverDelay ?? 400);
+    this._openTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
       this._openTimer = 0;
       if (this._insideButton)
         this._card?.open(this._button, this._config.position);
@@ -201,9 +226,9 @@ export class CadenceIndicator {
     const pill = this._config.mode === 'pill';
     this._iconBox.visible = !pill;
     this._pillBox.visible = pill;
-    this._button.remove_style_class_name('cadence-mode-pill');
-    this._button.remove_style_class_name('cadence-mode-icon');
-    this._button.add_style_class_name(pill ? 'cadence-mode-pill' : 'cadence-mode-icon');
+    this._button.remove_style_class_name('sonora-mode-pill');
+    this._button.remove_style_class_name('sonora-mode-icon');
+    this._button.add_style_class_name(pill ? 'sonora-mode-pill' : 'sonora-mode-icon');
     if (pill)
       GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
         this._fitPill();
@@ -386,18 +411,27 @@ export class CadenceIndicator {
   }
 
   setArt(pixbuf) {
+    if (this._destroyed)
+      return;
+
     this._pixbuf = pixbuf;
     this._renderArt();
     this._card?.setArt(pixbuf);
   }
 
   setAccent(rgb) {
+    if (this._destroyed)
+      return;
+
     this._accent = rgb;
     this._applyAccent();
     this._card?.setAccent(rgb);
   }
 
   setTrack(track) {
+    if (this._destroyed)
+      return;
+
     this._hasTrack = Boolean(track);
     this._pillTitle.text = track ? (track.title || 'Unknown') : 'Nothing playing';
     this._position = 0;
@@ -408,6 +442,9 @@ export class CadenceIndicator {
   }
 
   setPlaying(playing) {
+    if (this._destroyed)
+      return;
+
     this._playing = playing;
     if (playing)
       this._pillBox.remove_style_class_name('paused');
@@ -419,30 +456,55 @@ export class CadenceIndicator {
   }
 
   setPosition(position, duration) {
+    if (this._destroyed)
+      return;
+
     this._position = position;
     this._duration = duration;
     this._updateSlot();
     this._card?.setPosition(position, duration);
   }
 
-  setLyrics(current, next) {
-    this._card?.setLyrics(current, next);
+  setLyrics(lines, index) {
+    if (this._destroyed)
+      return;
+
+    this._card?.setLyrics(lines, index);
   }
 
   setLyricsVisible(visible) {
+    if (this._destroyed)
+      return;
+
     this._card?.setLyricsVisible(visible);
   }
 
   setStats(stats) {
+    if (this._destroyed)
+      return;
+
     this._card?.setStats(stats);
   }
 
+  setRepeat(mode) {
+    if (this._destroyed)
+      return;
+
+    this._card?.setRepeat(mode);
+  }
+
   setSleep(seconds) {
+    if (this._destroyed)
+      return;
+
     this._sleep = seconds;
     this._updateSlot();
   }
 
   setDuck(active) {
+    if (this._destroyed)
+      return;
+
     this._duck = active;
     this._updateSlot();
   }
@@ -460,7 +522,8 @@ export class CadenceIndicator {
 
   _slotContent() {
     if (this._sleep > 0)
-      return {kind: 'sleep', icon: 'night-light-symbolic', text: formatClock(this._sleep)};
+      return {kind: 'sleep', icon: `${extensionDir()}/${MOON_ICON}`,
+        text: formatClock(this._sleep)};
 
     if (this._duck)
       return {kind: 'duck', icon: 'audio-input-microphone-symbolic', text: 'Duck'};
@@ -472,7 +535,7 @@ export class CadenceIndicator {
   _applySlot({icon, text, kind}) {
     this._pillSlotIcon.visible = Boolean(icon);
     if (icon)
-      this._pillSlotIcon.icon_name = icon;
+      this._pillSlotIcon.set_gicon(Gio.icon_new_for_string(icon));
     this._pillSlotText.text = text;
     this._pillSlot.visible = this._hasTrack;
     this._pillSlot.accessible_name = kind === 'sleep'

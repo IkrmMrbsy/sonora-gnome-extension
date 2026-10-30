@@ -6,6 +6,8 @@ import {extensionDir} from './path.js';
 const SCHEMA = 'org.gnome.shell.extensions.spotify-ext';
 const MODES = ['icon', 'pill'];
 const POSITIONS = ['left', 'center', 'right'];
+const CARD_OPEN = ['hover', 'click', 'both'];
+const DUCK_MODES = ['off', 'duck', 'pause'];
 
 let _settings = null;
 
@@ -56,6 +58,10 @@ export function loadConfig() {
   return {
     mode: settings.get_string('mode'),
     position: settings.get_string('position'),
+    cardOpen: settings.get_string('card-open'),
+    hoverDelay: settings.get_int('hover-delay'),
+    duckMode: settings.get_string('duck-mode'),
+    duckLevel: settings.get_int('duck-level'),
   };
 }
 
@@ -65,6 +71,14 @@ export function saveConfig(config) {
     settings.set_string('mode', config.mode);
   if (POSITIONS.includes(config.position))
     settings.set_string('position', config.position);
+  if (CARD_OPEN.includes(config.cardOpen))
+    settings.set_string('card-open', config.cardOpen);
+  if (Number.isInteger(config.hoverDelay))
+    settings.set_int('hover-delay', Math.max(0, Math.min(2000, config.hoverDelay)));
+  if (DUCK_MODES.includes(config.duckMode))
+    settings.set_string('duck-mode', config.duckMode);
+  if (Number.isInteger(config.duckLevel))
+    settings.set_int('duck-level', Math.max(5, Math.min(95, config.duckLevel)));
   return loadConfig();
 }
 

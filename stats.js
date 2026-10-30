@@ -1,7 +1,19 @@
-export const VERSION = 2;
+export const VERSION = 3;
 
 function emptyDay() {
   return {seconds: 0, plays: 0, artists: {}, tracks: {}};
+}
+
+// Day-level tracks store {seconds, plays} so a calendar week can report both
+// listening time and play counts. Older files stored a bare number.
+function normalizeTrackBucket(raw) {
+  if (typeof raw === 'number')
+    return {seconds: Number(raw) || 0, plays: 0};
+
+  return {
+    seconds: Number(raw?.seconds) || 0,
+    plays: Number(raw?.plays) || 0,
+  };
 }
 
 function normalizeDay(raw) {
@@ -13,7 +25,8 @@ function normalizeDay(raw) {
     day.seconds = Number(raw.seconds) || 0;
     day.plays = Number(raw.plays) || 0;
     day.artists = {...(raw.artists ?? {})};
-    day.tracks = {...(raw.tracks ?? {})};
+    for (const [key, value] of Object.entries(raw.tracks ?? {}))
+      day.tracks[key] = normalizeTrackBucket(value);
   }
   return day;
 }
@@ -42,8 +55,10 @@ export function normalizeStats(raw) {
   return stats;
 }
 
+export const TRACK_SEPARATOR = ' – ';
+
 export function trackKey(artist, title) {
-  return artist ? `${artist} – ${title}` : title;
+  return artist ? `${artist}${TRACK_SEPARATOR}${title}` : title;
 }
 
 export function dayKey(date = new Date()) {
@@ -64,7 +79,9 @@ export function addListen(stats, {artist, title, seconds, day}) {
   bucket.seconds += seconds;
   if (artist)
     bucket.artists[artist] = (bucket.artists[artist] ?? 0) + seconds;
-  bucket.tracks[key] = (bucket.tracks[key] ?? 0) + seconds;
+  const dayTrack = bucket.tracks[key] ?? {seconds: 0, plays: 0};
+  dayTrack.seconds += seconds;
+  bucket.tracks[key] = dayTrack;
   stats.days[day] = bucket;
 
   const track = stats.tracks[key] ?? {seconds: 0, plays: 0};
@@ -84,6 +101,9 @@ export function addPlay(stats, {artist, title, day}) {
   if (day) {
     const bucket = stats.days[day] ?? emptyDay();
     bucket.plays += 1;
+    const dayTrack = bucket.tracks[key] ?? {seconds: 0, plays: 0};
+    dayTrack.plays += 1;
+    bucket.tracks[key] = dayTrack;
     stats.days[day] = bucket;
   }
 }
@@ -145,25 +165,78 @@ function weekStart(now = new Date()) {
 
 function weekBuckets(stats, now) {
   const start = weekStart(now);
+  const todayKey = dayKey(now);
   const out = [];
   for (let i = 0; i < 7; i++) {
     const date = new Date(start);
     date.setDate(date.getDate() + i);
     const key = dayKey(date);
-    out.push({key, seconds: daySeconds(stats.days, key), plays: stats.days[key]?.plays ?? 0,
-      artists: stats.days[key]?.artists ?? {}});
+    const day = stats.days[key];
+    out.push({
+      key,
+      date,
+      seconds: daySeconds(stats.days, key),
+      plays: day?.plays ?? 0,
+      artists: day?.artists ?? {},
+      tracks: day?.tracks ?? {},
+      isToday: key === todayKey,
+      isFuture: date > now && key !== todayKey,
+    });
   }
   return out;
 }
 
+// Calendar week (Monday..Sunday) — the only range the UI shows.
+export function currentWeek(stats, now = new Date()) {
+  const buckets = weekBuckets(stats, now);
+  return {
+    days: buckets,
+    seconds: buckets.reduce((sum, day) => sum + day.seconds, 0),
+    plays: buckets.reduce((sum, day) => sum + day.plays, 0),
+    activeDays: buckets.filter(day => day.seconds > 0).length,
+  };
+}
+
 export function weekTopArtist(stats, now = new Date()) {
+  const top = weekArtists(stats, now, 1);
+  return top.length ? [top[0].name, top[0].seconds] : null;
+}
+
+export function weekArtists(stats, now = new Date(), limit = 5) {
   const artists = {};
   for (const day of weekBuckets(stats, now)) {
     for (const [name, seconds] of Object.entries(day.artists))
       artists[name] = (artists[name] ?? 0) + seconds;
   }
-  const top = Object.entries(artists).sort((a, b) => b[1] - a[1])[0];
-  return top ? [top[0], top[1]] : null;
+
+  return Object.entries(artists)
+    .map(([name, seconds]) => ({name, seconds}))
+    .sort((a, b) => b.seconds - a.seconds)
+    .slice(0, limit);
+}
+
+export function weekTracks(stats, now = new Date(), limit = 5) {
+  const tracks = {};
+  for (const day of weekBuckets(stats, now)) {
+    for (const [key, bucket] of Object.entries(day.tracks)) {
+      const entry = tracks[key] ?? {key, seconds: 0, plays: 0};
+      entry.seconds += bucket.seconds ?? 0;
+      entry.plays += bucket.plays ?? 0;
+      tracks[key] = entry;
+    }
+  }
+
+  return Object.values(tracks)
+    .map(entry => {
+      const split = entry.key.indexOf(TRACK_SEPARATOR);
+      return {
+        ...entry,
+        artist: split === -1 ? '' : entry.key.slice(0, split),
+        title: split === -1 ? entry.key : entry.key.slice(split + TRACK_SEPARATOR.length),
+      };
+    })
+    .sort((a, b) => b.seconds - a.seconds)
+    .slice(0, limit);
 }
 
 export function todaySeconds(stats, now = new Date()) {

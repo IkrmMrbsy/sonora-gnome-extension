@@ -6,15 +6,15 @@ import Soup from 'gi://Soup?version=3.0';
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
 import {averageColor} from './color.js';
-import {CadenceIndicator} from './island.js';
+import {SonoraIndicator} from './island.js';
 import {pixbufToRGBA} from './art.js';
 import {getSettings, loadConfig, watchConfig} from './config.js';
 import {activeLine, parseLRC} from './lrc.js';
 import {MicMonitor} from './mic.js';
 import {Spotify} from './mpris.js';
 import {
-  addListen, addPlay, bestStreak, currentStreak, dayKey, emptyStats, lastNDays,
-  normalizeStats, todayPlays, todaySeconds, trackKey, weekTopArtist,
+  addListen, addPlay, bestStreak, currentStreak, currentWeek, dayKey, emptyStats,
+  normalizeStats, trackKey, weekArtists, weekTracks,
 } from './stats.js';
 import {VolumeController} from './volume.js';
 
@@ -79,7 +79,9 @@ export default class SpotifyLyricsExtension extends Extension {
     this._sleepUntil = 0;
 
     this._lyricsEnabled = this._settings.get_boolean('lyrics-visible');
-    this._duckEnabled = this._settings.get_boolean('duck-enabled');
+    this._duckMode = this._settings.get_string('duck-mode');
+    this._duckLevel = this._settings.get_int('duck-level');
+    this._micActive = false;
 
     this._lines = [];
     this._lineIndex = -1;
@@ -94,11 +96,12 @@ export default class SpotifyLyricsExtension extends Extension {
     this._cancellable = new Gio.Cancellable();
     this._http = new Soup.Session({timeout: 10});
 
-    this._indicator = new CadenceIndicator(this._config, {
+    this._indicator = new SonoraIndicator(this._config, {
       onTogglePlay: () => this._togglePlay(),
       onNext: () => this._spotify.next(),
       onPrev: () => this._spotify.previous(),
       onSeek: usec => this._seek(usec),
+      onRepeat: mode => this._setRepeat(mode),
       onOpenSpotify: () => this._openSpotify(),
     });
 
@@ -110,8 +113,8 @@ export default class SpotifyLyricsExtension extends Extension {
     this._settingIds = [
       this._settings.connect('changed::lyrics-visible',
         () => this._setLyricsEnabled(this._settings.get_boolean('lyrics-visible'))),
-      this._settings.connect('changed::duck-enabled',
-        () => this._setDuckEnabled(this._settings.get_boolean('duck-enabled'))),
+      this._settings.connect('changed::duck-mode', () => this._applyDuckSettings()),
+      this._settings.connect('changed::duck-level', () => this._applyDuckSettings()),
       this._settings.connect('changed::sleep-minutes', () => this._applySleepSetting()),
     ];
     this._applySleepSetting();
@@ -226,12 +229,33 @@ export default class SpotifyLyricsExtension extends Extension {
     this._indicator?.setLyricsVisible(state);
   }
 
-  _setDuckEnabled(state) {
-    this._duckEnabled = state;
-    if (!state) {
-      this._volume.unduck();
-      this._indicator?.setDuck(false);
-    }
+  _applyDuckSettings() {
+    const previous = this._duckMode;
+    this._duckMode = this._settings.get_string('duck-mode');
+    this._duckLevel = this._settings.get_int('duck-level');
+
+    if (this._duckMode === previous)
+      return;
+
+    // Drop whatever the old mode was doing before applying the new one.
+    this._volume.unduck();
+    this._volume.resumeFromMic();
+    this._indicator?.setDuck(false);
+
+    if (this._micActive)
+      this._onMicChange(true);
+  }
+
+  _setRepeat(mode) {
+    if (!this._spotify.setLoopStatus(mode))
+      return;
+    this._indicator?.setRepeat(mode);
+  }
+
+  _syncRepeat() {
+    const mode = this._spotify.loopStatus();
+    if (mode)
+      this._indicator?.setRepeat(mode);
   }
 
   _cancelSleep() {
@@ -260,14 +284,29 @@ export default class SpotifyLyricsExtension extends Extension {
   }
 
   _onMicChange(active) {
-    if (!this._duckEnabled)
+    this._micActive = active;
+
+    if (this._duckMode === 'off') {
+      this._indicator?.setDuck(false);
       return;
+    }
+
+    if (this._duckMode === 'pause') {
+      if (active) {
+        this._volume.pauseForMic();
+        this._indicator?.setDuck(true);
+      } else {
+        this._volume.resumeFromMic();
+        this._indicator?.setDuck(false);
+      }
+      return;
+    }
 
     if (active)
-      this._volume.duck();
+      this._volume.duck(this._duckLevel);
     else
       this._volume.unduck();
-    this._indicator?.setDuck(active && this._duckEnabled);
+    this._indicator?.setDuck(active);
   }
 
   _sync() {
@@ -289,7 +328,7 @@ export default class SpotifyLyricsExtension extends Extension {
       this._lineIndex = -1;
       this._indicator?.setPlaying(false);
       this._indicator?.setTrack(null);
-      this._indicator?.setLyrics('', '');
+      this._indicator?.setLyrics([], -1);
       this._indicator?.setPosition(0, 0);
       this._updateSleep();
       this._checkSleep();
@@ -298,6 +337,7 @@ export default class SpotifyLyricsExtension extends Extension {
 
     this._playing = playing;
     this._indicator?.setPlaying(playing);
+    this._syncRepeat();
 
     const key = `${track.id}|${track.title}`;
     if (key !== this._trackKey) {
@@ -306,7 +346,7 @@ export default class SpotifyLyricsExtension extends Extension {
       this._lines = [];
       this._lineIndex = -1;
       this._indicator?.setTrack(track);
-      this._indicator?.setLyrics('', '');
+      this._indicator?.setLyrics([], -1);
       this._indicator?.setPosition(0, track.duration);
 
       if (track.artist && track.duration >= 30)
@@ -376,19 +416,28 @@ export default class SpotifyLyricsExtension extends Extension {
   }
 
   _updateCardStats() {
-    if (!this._indicator)
+    if (!this._indicator || this._destroyed)
       return;
 
     const now = new Date();
-    const week = lastNDays(this._stats, 7, now).map(day => day.seconds);
-    const top = weekTopArtist(this._stats, now);
+    const week = currentWeek(this._stats, now);
+    const artists = weekArtists(this._stats, now, 5);
+    const tracks = weekTracks(this._stats, now, 5);
+
     this._indicator.setStats({
-      week,
-      todaySeconds: todaySeconds(this._stats, now),
-      todayPlays: todayPlays(this._stats, now),
+      weekSeconds: week.seconds,
+      activeDays: week.activeDays,
+      days: week.days.map(day => ({
+        key: day.key,
+        seconds: day.seconds,
+        isToday: day.isToday,
+        isFuture: day.isFuture,
+      })),
+      artists,
+      tracks,
       streak: currentStreak(this._stats.days, now),
       bestStreak: bestStreak(this._stats.days),
-      topArtist: top ? top[0] : '',
+      topArtist: artists.length ? artists[0].name : '',
     });
   }
 
@@ -549,8 +598,7 @@ export default class SpotifyLyricsExtension extends Extension {
     const index = activeLine(this._lines, position);
     if (index !== this._lineIndex) {
       this._lineIndex = index;
-      this._indicator?.setLyrics(index >= 0 ? this._lines[index].text : '',
-        this._lines[index + 1]?.text ?? '');
+      this._indicator?.setLyrics(this._lines, index);
     }
   }
 }

@@ -87,6 +87,16 @@ export class Spotify {
     return this._getProperty('Volume');
   }
 
+  loopStatus() {
+    return this._getProperty('LoopStatus');
+  }
+
+  setLoopStatus(value) {
+    if (!['None', 'Track', 'Playlist'].includes(value))
+      return false;
+    return this._setProperty('LoopStatus', new GLib.Variant('s', value));
+  }
+
   setVolume(value) {
     return this._setProperty('Volume', new GLib.Variant('d', value));
   }

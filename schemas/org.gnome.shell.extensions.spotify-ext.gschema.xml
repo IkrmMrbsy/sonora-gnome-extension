@@ -20,15 +20,42 @@
       <summary>Panel position</summary>
       <description>Where the indicator sits in the top panel.</description>
     </key>
+    <key name="card-open" type="s">
+      <choices>
+        <choice value="hover"/>
+        <choice value="click"/>
+        <choice value="both"/>
+      </choices>
+      <default>'hover'</default>
+      <summary>How the card opens</summary>
+      <description>Open on hover, only on click, or both.</description>
+    </key>
+    <key name="hover-delay" type="i">
+      <range min="0" max="2000"/>
+      <default>400</default>
+      <summary>Hover delay</summary>
+      <description>Milliseconds to wait before the card opens on hover.</description>
+    </key>
     <key name="lyrics-visible" type="b">
       <default>true</default>
       <summary>Show lyrics</summary>
       <description>Show synced lyrics in the now-playing card.</description>
     </key>
-    <key name="duck-enabled" type="b">
-      <default>true</default>
-      <summary>Lower music when mic is used</summary>
-      <description>Duck Spotify volume while a microphone stream is active.</description>
+    <key name="duck-mode" type="s">
+      <choices>
+        <choice value="off"/>
+        <choice value="duck"/>
+        <choice value="pause"/>
+      </choices>
+      <default>'duck'</default>
+      <summary>What to do when a microphone is used</summary>
+      <description>Leave playback alone, lower the volume, or pause until the microphone is free again.</description>
+    </key>
+    <key name="duck-level" type="i">
+      <range min="5" max="95"/>
+      <default>30</default>
+      <summary>Ducked volume</summary>
+      <description>Volume percentage kept while ducking. 30 means the volume drops to 30% of its original level.</description>
     </key>
     <key name="sleep-minutes" type="i">
       <range min="0" max="120"/>
