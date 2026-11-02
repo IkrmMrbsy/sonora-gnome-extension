@@ -5,6 +5,24 @@ const BUS_NAME = 'org.mpris.MediaPlayer2.spotify';
 const OBJECT_PATH = '/org/mpris/MediaPlayer2';
 const PLAYER = 'org.mpris.MediaPlayer2.Player';
 
+export function parseTrackMetadata(metadata) {
+  const read = name => metadata.lookup_value(name, null)?.deepUnpack() ?? null;
+  const title = read('xesam:title');
+  if (!title)
+    return null;
+
+  const artist = read('xesam:artist');
+  return {
+    id: read('mpris:trackid') ?? title,
+    title,
+    artist: Array.isArray(artist) ? artist.join(', ') : (artist ?? ''),
+    album: read('xesam:album') ?? '',
+    duration: Math.round((read('mpris:length') ?? 0) / 1e6),
+    artUrl: read('mpris:artUrl') ?? '',
+    url: read('xesam:url') ?? '',
+  };
+}
+
 export class Spotify {
   constructor() {
     this._bus = Gio.DBus.session;
@@ -60,21 +78,7 @@ export class Spotify {
     if (!metadata)
       return null;
 
-    const read = name => metadata.lookup_value(name, null)?.deepUnpack() ?? null;
-    const title = read('xesam:title');
-    if (!title)
-      return null;
-
-    const artist = read('xesam:artist');
-    return {
-      id: read('mpris:trackid') ?? title,
-      title,
-      artist: Array.isArray(artist) ? artist.join(', ') : (artist ?? ''),
-      album: read('xesam:album') ?? '',
-      duration: Math.round((read('mpris:length') ?? 0) / 1e6),
-      artUrl: read('mpris:artUrl') ?? '',
-      url: read('xesam:url') ?? '',
-    };
+    return parseTrackMetadata(metadata);
   }
 
   // ponytail: sync Get once per second on the local bus, negligible cost.

@@ -5,21 +5,22 @@ import Soup from 'gi://Soup?version=3.0';
 
 import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
+import {ArtTracker} from './src/core/art.js';
 import {averageColor} from './src/util/color.js';
 import {SonoraIndicator} from './src/ui/indicator.js';
 import {pixbufToRGBA} from './src/util/art.js';
-import {getSettings, loadConfig, watchConfig} from './src/core/settings.js';
+import {configNeedsRelayout, getSettings, loadConfig, watchConfig} from './src/core/settings.js';
 import {activeLine} from './src/core/lrc.js';
 import {LyricsClient} from './src/core/lyrics.js';
+import {PlaybackTracker} from './src/core/playback.js';
+import {RequestToken} from './src/core/token.js';
 import {MicMonitor} from './src/core/mic.js';
 import {Spotify} from './src/core/player.js';
 import {
   addListen, addPlay, bestStreak, currentStreak, currentWeek, dayKey, emptyStats,
-  normalizeStats, trackKey, weekArtists, weekTracks,
+  normalizeStats, pruneStats, weekArtists, weekTracks,
 } from './src/core/stats.js';
 import {VolumeController} from './src/core/volume.js';
-
-const PLAY_THRESHOLD = 30;
 
 function statsFile() {
   return Gio.File.new_for_path(
@@ -29,12 +30,17 @@ function statsFile() {
 function loadStats() {
   try {
     const [ok, bytes] = statsFile().load_contents(null);
-    if (ok)
-      return normalizeStats(JSON.parse(new TextDecoder().decode(bytes)));
+    if (ok) {
+      const raw = JSON.parse(new TextDecoder().decode(bytes));
+      const stats = normalizeStats(raw);
+      const dirty = pruneStats(stats) || raw?.version !== stats.version ||
+        raw?.tracks !== undefined || raw?.artists !== undefined;
+      return {stats, dirty};
+    }
   } catch {
     // Missing or corrupt file: start fresh.
   }
-  return emptyStats();
+  return {stats: emptyStats(), dirty: false};
 }
 
 function saveStats(stats) {
@@ -43,11 +49,13 @@ function saveStats(stats) {
     const dir = file.get_parent();
     if (!dir.query_exists(null))
       dir.make_directory_with_parents(null);
-    file.replace_contents(
+    const [ok] = file.replace_contents(
       new TextEncoder().encode(JSON.stringify(stats)),
       null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
+    return ok;
   } catch (error) {
     console.error(`spotify-ext: failed to save stats: ${error}`);
+    return false;
   }
 }
 
@@ -57,15 +65,16 @@ export default class SpotifyLyricsExtension extends Extension {
     this._settings = getSettings();
     this._spotify = new Spotify();
     this._volume = new VolumeController(this._spotify);
-    this._stats = loadStats();
-    this._statsDirty = false;
+    const loaded = loadStats();
+    this._stats = loaded.stats;
+    this._statsDirty = loaded.dirty;
+    this._pruneDay = dayKey(new Date());
+    this._destroyed = false;
 
-    this._artFor = null;
-    this._artToken = 0;
+    this._art = new ArtTracker();
     this._pixbufs = new Map();
 
-    this._listen = null;
-    this._lastSyncAt = 0;
+    this._playback = new PlaybackTracker();
     this._sleepUntil = 0;
 
     this._lyricsEnabled = this._settings.get_boolean('lyrics-visible');
@@ -80,11 +89,10 @@ export default class SpotifyLyricsExtension extends Extension {
     this._playing = false;
     this._position = 0;
     this._positionAt = GLib.get_monotonic_time() / 1e6;
-    this._lyricsClient = new LyricsClient(this._cancellable);
-    this._token = 0;
-
     this._cancellable = new Gio.Cancellable();
     this._http = new Soup.Session({timeout: 10});
+    this._lyricsClient = new LyricsClient(this._cancellable);
+    this._lyricsToken = new RequestToken();
 
     this._indicator = new SonoraIndicator(this._config, {
       onTogglePlay: () => this._togglePlay(),
@@ -95,9 +103,9 @@ export default class SpotifyLyricsExtension extends Extension {
       onOpenSpotify: () => this._openSpotify(),
     });
 
-    this._configWatch = watchConfig(config => {
+    this._configWatch = watchConfig((config, key) => {
       this._config = config;
-      this._indicator?.applyConfig(config);
+      this._indicator?.applyConfig(config, configNeedsRelayout(key));
     });
 
     this._settingIds = [
@@ -120,7 +128,7 @@ export default class SpotifyLyricsExtension extends Extension {
       this._tick();
       return GLib.SOURCE_CONTINUE;
     });
-    this._saveTimer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 30, () => {
+    this._saveTimer = GLib.timeout_add_seconds(GLib.PRIORITY_DEFAULT, 300, () => {
       this._saveStats();
       return GLib.SOURCE_CONTINUE;
     });
@@ -133,6 +141,8 @@ export default class SpotifyLyricsExtension extends Extension {
   }
 
   disable() {
+    this._destroyed = true;
+
     for (const timer of [this._syncTimer, this._tickTimer, this._saveTimer,
       this._statsTimer]) {
       if (timer)
@@ -155,6 +165,8 @@ export default class SpotifyLyricsExtension extends Extension {
     this._volume.destroy();
     this._cancellable.cancel();
     this._http.abort();
+    this._lyricsToken?.invalidate();
+    this._art?.clear();
 
     // Null the reference before destroying so a queued timer callback that
     // still fires cannot touch disposed actors.
@@ -224,8 +236,11 @@ export default class SpotifyLyricsExtension extends Extension {
     this._duckMode = this._settings.get_string('duck-mode');
     this._duckLevel = this._settings.get_int('duck-level');
 
-    if (this._duckMode === previous)
+    if (this._duckMode === previous) {
+      if (this._micActive && this._duckMode === 'duck')
+        this._volume.duck(this._duckLevel);
       return;
+    }
 
     // Drop whatever the old mode was doing before applying the new one.
     this._volume.unduck();
@@ -309,13 +324,15 @@ export default class SpotifyLyricsExtension extends Extension {
 
     if (!track) {
       this._playing = false;
-      this._lastSyncAt = 0;
-      this._listen = null;
+      this._playback.reset();
       this._track = null;
+      this._lyricsToken.invalidate();
       // Reset the key so the same track republishes after Spotify reopens.
       this._trackKey = null;
       this._lines = [];
       this._lineIndex = -1;
+      if (this._art.hasState())
+        this._clearArt();
       this._indicator?.setPlaying(false);
       this._indicator?.setTrack(null);
       this._indicator?.setLyrics([], -1);
@@ -333,6 +350,7 @@ export default class SpotifyLyricsExtension extends Extension {
     if (key !== this._trackKey) {
       this._trackKey = key;
       this._track = track;
+      this._lyricsToken.invalidate();
       this._lines = [];
       this._lineIndex = -1;
       this._indicator?.setTrack(track);
@@ -342,25 +360,27 @@ export default class SpotifyLyricsExtension extends Extension {
       if (track.artist && track.duration >= 30)
         this._load(track);
 
-      if (track.artUrl)
-        this._loadArt(track);
-      else
-        this._indicator?.setArt(null);
-
       this._updateCardStats();
     }
 
+    if (track.artUrl) {
+      this._loadArt(track);
+    } else if (this._art.hasState()) {
+      this._clearArt();
+    }
+
     const position = this._spotify.position();
-    if (position !== null) {
+    const hasPosition = position !== null;
+    if (hasPosition) {
       this._position = position;
       this._positionAt = GLib.get_monotonic_time() / 1e6;
     }
 
     if (playing) {
-      this._accumulate(track);
+      this._accumulate(track, hasPosition ? this._position : null);
     } else {
-      this._listen = null;
-      this._lastSyncAt = 0;
+      this._playback.pause(hasPosition ? this._position : null,
+        GLib.get_monotonic_time() / 1e6);
     }
 
     this._indicator?.setPosition(this._position, track.duration);
@@ -368,41 +388,44 @@ export default class SpotifyLyricsExtension extends Extension {
     this._checkSleep();
   }
 
-  _accumulate(track) {
+  _accumulate(track, position) {
     const now = GLib.get_monotonic_time() / 1e6;
-    const delta = this._lastSyncAt ? Math.min(2, Math.max(0, now - this._lastSyncAt)) : 0;
-    this._lastSyncAt = now;
-    if (delta <= 0)
-      return;
-
-    const key = trackKey(track.artist, track.title);
-    if (!this._listen || this._listen.key !== key) {
-      this._listen = {key, seconds: 0, counted: false, artist: track.artist, title: track.title};
-    }
-    this._listen.seconds += delta;
-
+    const {seconds, counted} = this._playback.update(track, position, now, true);
     const date = new Date();
-    addListen(this._stats, {
-      artist: track.artist,
-      title: track.title,
-      seconds: delta,
-      day: dayKey(date),
-    });
-    this._statsDirty = true;
 
-    if (!this._listen.counted && this._listen.seconds >= PLAY_THRESHOLD) {
-      this._listen.counted = true;
+    if (seconds > 0) {
+      addListen(this._stats, {
+        artist: track.artist,
+        title: track.title,
+        seconds,
+        day: dayKey(date),
+      });
+      this._statsDirty = true;
+    }
+
+    if (counted) {
       addPlay(this._stats, {artist: track.artist, title: track.title, day: dayKey(date)});
+      this._statsDirty = true;
       this._updateCardStats();
     }
   }
 
   _saveStats() {
-    if (!this._statsDirty || !this._stats)
+    if (!this._stats)
       return;
 
-    saveStats(this._stats);
-    this._statsDirty = false;
+    const today = dayKey(new Date());
+    if (today !== this._pruneDay) {
+      this._pruneDay = today;
+      if (pruneStats(this._stats))
+        this._statsDirty = true;
+    }
+
+    if (!this._statsDirty)
+      return;
+
+    if (saveStats(this._stats))
+      this._statsDirty = false;
   }
 
   _updateCardStats() {
@@ -431,15 +454,36 @@ export default class SpotifyLyricsExtension extends Extension {
     });
   }
 
+  _clearArt() {
+    this._art.clear();
+    this._indicator?.setArt(null);
+  }
+
   async _loadArt(track) {
-    if (!track.artUrl || track.artUrl === this._artFor)
+    const url = track.artUrl;
+    if (!url) {
+      if (this._art.hasState())
+        this._clearArt();
+      return;
+    }
+
+    const now = GLib.get_monotonic_time() / 1e6;
+    const started = this._art.begin(url, now);
+    if (!started)
       return;
 
-    this._artFor = track.artUrl;
-    const token = ++this._artToken;
-    const pixbuf = await this._fetchPixbuf(track.artUrl);
-    if (!pixbuf || token !== this._artToken)
+    if (started.previous)
+      this._indicator?.setArt(null);
+
+    const pixbuf = await this._fetchPixbuf(url);
+    const result = this._art.finish(started.token, url, Boolean(pixbuf),
+      GLib.get_monotonic_time() / 1e6);
+    if (result === null)
       return;
+    if (!result) {
+      this._indicator?.setArt(null);
+      return;
+    }
 
     this._indicator?.setArt(pixbuf);
 
@@ -449,6 +493,20 @@ export default class SpotifyLyricsExtension extends Extension {
     const rgba = pixbufToRGBA(small);
     const rgb = averageColor(rgba.data, rgba.rowstride, rgba.width, rgba.height);
     this._indicator?.setAccent(rgb);
+  }
+
+  _send(message) {
+    return new Promise((resolve, reject) => {
+      this._http.send_and_read_async(
+        message, GLib.PRIORITY_DEFAULT, this._cancellable,
+        (session, result) => {
+          try {
+            resolve(session.send_and_read_finish(result));
+          } catch (error) {
+            reject(error);
+          }
+        });
+    });
   }
 
   async _fetchPixbuf(url) {
@@ -471,9 +529,9 @@ export default class SpotifyLyricsExtension extends Extension {
   }
 
   async _load(track) {
-    const token = ++this._token;
+    const token = this._lyricsToken.next();
     const lines = await this._lyricsClient.fetchFor(track);
-    if (token !== this._token)
+    if (!this._lyricsToken.isCurrent(token))
       return;
 
     this._lines = lines;

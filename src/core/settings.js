@@ -6,8 +6,7 @@ import {extensionDir} from '../util/path.js';
 const SCHEMA = 'org.gnome.shell.extensions.spotify-ext';
 const MODES = ['icon', 'pill'];
 const POSITIONS = ['left', 'center', 'right'];
-const CARD_OPEN = ['hover', 'click', 'both'];
-const DUCK_MODES = ['off', 'duck', 'pause'];
+const LAYOUT_KEYS = new Set(['mode', 'position']);
 
 let _settings = null;
 
@@ -65,26 +64,13 @@ export function loadConfig() {
   };
 }
 
-export function saveConfig(config) {
-  const settings = getSettings();
-  if (MODES.includes(config.mode))
-    settings.set_string('mode', config.mode);
-  if (POSITIONS.includes(config.position))
-    settings.set_string('position', config.position);
-  if (CARD_OPEN.includes(config.cardOpen))
-    settings.set_string('card-open', config.cardOpen);
-  if (Number.isInteger(config.hoverDelay))
-    settings.set_int('hover-delay', Math.max(0, Math.min(2000, config.hoverDelay)));
-  if (DUCK_MODES.includes(config.duckMode))
-    settings.set_string('duck-mode', config.duckMode);
-  if (Number.isInteger(config.duckLevel))
-    settings.set_int('duck-level', Math.max(5, Math.min(95, config.duckLevel)));
-  return loadConfig();
+export function configNeedsRelayout(key) {
+  return !key || LAYOUT_KEYS.has(key);
 }
 
 export function watchConfig(callback) {
   const settings = getSettings();
-  const id = settings.connect('changed', () => callback(loadConfig()));
+  const id = settings.connect('changed', (settings, key) => callback(loadConfig(), key));
   return {
     destroy() {
       settings.disconnect(id);

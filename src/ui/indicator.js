@@ -333,9 +333,10 @@ export class SonoraIndicator {
     this._fitPill();
   }
 
-  applyConfig(config) {
+  applyConfig(config, relayout = true) {
     this._config = config;
-    this._card?.close(false);
+    if (relayout)
+      this._card?.close(false);
     this._applyMode();
     this._place();
   }

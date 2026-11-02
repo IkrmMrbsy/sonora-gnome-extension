@@ -33,9 +33,11 @@ export class LyricsClient {
       return cached;
 
     const lines = await this._fetch(track);
-    this._cache.set(key, lines);
-    if (this._cache.size > CACHE_LIMIT)
-      this._cache.delete(this._cache.keys().next().value);
+    if (lines.length) {
+      this._cache.set(key, lines);
+      if (this._cache.size > CACHE_LIMIT)
+        this._cache.delete(this._cache.keys().next().value);
+    }
 
     return lines;
   }
@@ -48,10 +50,11 @@ export class LyricsClient {
         album_name: track.album,
         duration: track.duration,
       }));
-      return parseLRC(data.syncedLyrics);
-    } catch (error) {
-      if (error.status !== 404)
-        return [];
+      const lines = parseLRC(data.syncedLyrics);
+      if (lines.length)
+        return lines;
+    } catch {
+      // Fall through to search: /get can miss or fail transiently.
     }
 
     try {
@@ -65,10 +68,16 @@ export class LyricsClient {
         .sort((a, b) =>
           Math.abs(a.duration - track.duration) - Math.abs(b.duration - track.duration));
 
-      return candidates.length ? parseLRC(candidates[0].syncedLyrics) : [];
+      for (const candidate of candidates) {
+        const lines = parseLRC(candidate.syncedLyrics);
+        if (lines.length)
+          return lines;
+      }
     } catch {
-      return [];
+      // No usable result.
     }
+
+    return [];
   }
 
   async _getJSON(url, attempt = 0) {
