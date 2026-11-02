@@ -1,256 +1,128 @@
-# Struktur Repo
+# Struktur dan Arsitektur Repo
 
-Rencana penataan ulang repositori. Sebagian besar sudah dieksekusi; dokumen ini menjadi acuan struktur akhir.
+Dokumen ini menjelaskan susunan kode yang ada saat ini dan alasan batas
+utamanya. Untuk cara memasang dan memakai ekstensi, lihat
+[`../README.md`](../README.md).
 
-## Kenapa perlu ditata
+## Struktur saat ini
 
-Keadaan sekarang:
-
-| Masalah | Angka |
-|---|---|
-| `card.js` memegang lima tanggung jawab sekaligus | 1.196 baris |
-| `extension.js` mencampur timer, HTTP, cache, statistik, sleep, seek | 604 baris |
-| `island.js` mencampur layout panel, tint Cairo, dan data | 607 baris |
-| Tes tersebar di root, dijalankan satu per satu | 4 berkas `test-*.js` |
-| Mockup desain duduk di root seolah bagian runtime | `mockup/index.html`, 3.914 baris |
-| Hasil kompilasi skema ikut ter-commit | `schemas/gschemas.compiled` |
-| Tidak ada skrip build, tes, atau paket | — |
-
-Dua berkas terbesar menampung 42% kode dan keduanya sulit diubah tanpa risiko regresi.
-
-## Batasan yang tidak bisa dilanggar
-
-GNOME Shell membaca beberapa berkas langsung dari root ekstensi. Ini bukan pilihan gaya, tapi kontrak:
-
-| Berkas | Alasan |
-|---|---|
-| `metadata.json` | dibaca saat startup, harus di root |
-| `extension.js` | entry point, dicari di root |
-| `prefs.js` | dicari di root saat preferensi dibuka |
-| `schemas/` | `Gio.SettingsSchemaSource.new_from_directory` menunjuk ke sini |
-| `stylesheet.css` | Shell hanya memuat satu berkas CSS dari root |
-
-Modul lain bebas pindah ke subfolder karena impor relatif (`./ui/card/index.js`) didukung penuh oleh ESM di GJS. Konsekuensi penting: **tidak wajib ada build step**, dan itu yang dipertahankan.
-
-## Struktur tujuan
-
-```
+```text
 sonora/
-├── metadata.json              # wajib root
-├── extension.js               # wajib root, hanya orkestrasi (~250 baris)
-├── prefs.js                   # wajib root
-├── stylesheet.css             # wajib root
-│
-├── src/
-│   ├── core/                  # logika murni, tanpa St/Clutter
-│   │   ├── player.js          # dari mpris.js
-│   │   ├── lyrics.js          # client lrclib, dipisah dari extension.js
-│   │   ├── lrc.js             # parser, tetap
-│   │   ├── stats.js           # model + agregasi mingguan
-│   │   ├── playback.js        # hitungan putar berbasis posisi
-│   │   ├── art.js             # state fetch/cache/retry album art
-│   │   ├── token.js           # token pembatalan request async
-│   │   ├── settings.js        # dari config.js
-│   │   ├── volume.js          # fade, duck, pause-for-mic
-│   │   └── mic.js             # Gvc monitor
-│   │
-│   ├── ui/
-│   │   ├── indicator.js       # dari island.js (~350 baris)
-│   │   ├── geometry.js        # helper geometri kartu dan progress
-│   │   ├── widgets.js         # ellipsize, iconButton, formatClock, formatWeek
-│   │   ├── paint.js           # drawTint, drawArrow, roundedClip
-│   │   └── card/
-│   │       ├── index.js       # NowPlayingCard, orkestrasi (~350)
-│   │       ├── layout.js      # relayout, place, geometri affordance
-│   │       ├── head.js        # cover + judul + kontrol + repeat
-│   │       ├── timer.js       # baris waktu + seek
-│   │       ├── footer.js      # this week + streak
-│   │       ├── lyrics-panel.js
-│   │       └── stats-panel.js
-│   │
-│   └── util/
-│       ├── art.js             # pixbufToRGBA, setArtImage
-│       ├── color.js           # averageColor
-│       └── path.js            # extensionDir
-│
+├── metadata.json
+├── extension.js
+├── prefs.js
+├── stylesheet.css
+├── Makefile
+├── README.md
 ├── schemas/
-│   ├── org.gnome.shell.extensions.spotify-ext.gschema.xml
-│   └── gschemas.compiled      # generated, tidak di-commit
-│
+│   └── org.gnome.shell.extensions.spotify-ext.gschema.xml
 ├── icons/
-│
+│   ├── sonora-flame-symbolic.svg
+│   └── sonora-moon-symbolic.svg
+├── src/
+│   ├── core/
+│   │   ├── art.js
+│   │   ├── lrc.js
+│   │   ├── lyrics.js
+│   │   ├── mic.js
+│   │   ├── playback.js
+│   │   ├── player.js
+│   │   ├── settings.js
+│   │   ├── stats.js
+│   │   ├── token.js
+│   │   └── volume.js
+│   ├── ui/
+│   │   ├── card/
+│   │   │   ├── footer.js
+│   │   │   ├── head.js
+│   │   │   ├── index.js
+│   │   │   ├── lyrics-panel.js
+│   │   │   ├── stats-panel.js
+│   │   │   └── timer.js
+│   │   ├── geometry.js
+│   │   ├── indicator.js
+│   │   ├── paint.js
+│   │   └── widgets.js
+│   └── util/
+│       ├── art.js
+│       ├── color.js
+│       └── path.js
 ├── tests/
-│   ├── run.js                 # runner tunggal
-│   ├── lrc.test.js
-│   ├── stats.test.js
-│   ├── volume.test.js
-│   ├── color.test.js
-│   └── ...                    # test lain per modul
-│
+│   ├── run.js
+│   └── *.test.js
 ├── dev/
 │   ├── fake-spotify.js
-│   └── run-headless.sh        # satu perintah untuk dev loop
-│
-├── docs/
-│   ├── STRUCTURE.md           # dokumen ini
-│   ├── IDEAS.md
-│   ├── ROADMAP.md
-│   └── mockup/
-│       └── index.html
-│
-├── Makefile
-├── .gitignore
-├── .editorconfig
-├── README.md
-└── LICENSE
+│   └── run-headless.sh
+└── docs/
+    ├── IDEAS.md
+    ├── ROADMAP.md
+    ├── STRUCTURE.md
+    └── mockup/
+        └── index.html
 ```
 
-## Alasan tiap keputusan
+`schemas/gschemas.compiled` dibuat oleh `make schemas` dan tidak perlu
+disimpan sebagai sumber.
 
-### `card.js` dipecah per panel, bukan per jenis kode
+## Batas modul
 
-Satu kelas sekarang menangani build UI, geometri, event, gambar Cairo, dan render data. Pemecahan mengikuti **panel** (head, timer, footer, lirik, statistik), bukan lapisan teknis. Alasannya: perubahan fitur biasanya menyentuh satu panel, jadi satu berkas = satu alasan untuk berubah. Hasilnya tiap berkas ~100–200 baris.
+### Root ekstensi
 
-`index.js` tetap menjadi satu-satunya yang tahu urutan build, animasi buka/tutup, dan koordinasi antar panel.
+GNOME Shell mengharapkan `metadata.json`, `extension.js`, `prefs.js`,
+`stylesheet.css`, dan direktori skema pada lokasi yang dapat diakses ekstensi.
+`extension.js` menghubungkan player, pengaturan, statistik, lirik, volume, dan
+UI; `prefs.js` membangun preferensi GSettings.
 
-### `core/` bebas St dan Clutter
+### `src/core/`
 
-`stats`, `lrc`, `player`, `settings` tidak boleh menyentuh aktor. Dengan begitu:
+Logika data dan layanan ekstensi berada di sini:
 
-- bisa diuji tanpa menjalankan Shell (test cepat, bisa masuk CI)
-- batas antara "logika" dan "tampilan" jadi nyata, bukan sekadar konvensi
+- `player.js` membaca status dan metadata Spotify melalui MPRIS/D-Bus.
+- `lyrics.js` mengambil dan menyimpan cache lirik; `lrc.js` mem-parsing data
+  LRC.
+- `stats.js` menormalisasi, mencatat, memangkas, dan mengagregasi statistik.
+- `playback.js` melacak waktu dengar dan ambang hitungan putar dari posisi.
+- `art.js` mengelola state pemuatan dan retry album art; `token.js` membantu
+  mengabaikan hasil request yang sudah usang.
+- `settings.js` mengakses GSettings dan memigrasikan konfigurasi lama.
+- `volume.js` menangani fade, duck, pause, dan pemulihan volume; `mic.js`
+  memantau penggunaan mikrofon.
 
-`ui/` sebaliknya boleh bergantung penuh pada Shell.
+Modul core tidak membangun aktor UI. Sebagian modul tetap menggunakan layanan
+GNOME seperti Gio, GLib, Soup, atau Gvc; pemisahan ini bukan berarti semua
+modul core merupakan JavaScript murni tanpa dependensi platform.
 
-### `lyrics.js` dipisah dari `extension.js`
+### `src/ui/`
 
-Sekarang `extension.js` memegang timer 1 detik, akumulasi statistik, fetch HTTP, cache, sleep timer, dan seek dalam satu kelas. Fetch lirik adalah bagian yang paling sering berubah; mencampurnya dengan loop periodik membuat perubahan kecil berisiko.
+`indicator.js` mengelola indikator panel dan koordinasi kartu. `card/` berisi
+bagian UI kartu now-playing: header/kontrol, timer, footer, lirik, dan
+statistik. `geometry.js` menyediakan perhitungan geometri yang dapat diuji
+terpisah; `widgets.js` dan `paint.js` berisi helper tampilan.
 
-Setelah dipisah, `extension.js` tinggal merangkai: buat komponen, sambungkan callback, jalankan timer.
+`src/util/` berisi helper gambar, warna, dan resolusi path ekstensi yang
+digunakan lintas modul.
 
-### `docs/mockup/`
+## Pengujian dan tooling
 
-Mockup 3.914 baris adalah artefak desain, bukan runtime. Menaruhnya di `docs/` menegaskan mana yang dikirim ke pengguna dan mana yang tidak, sekaligus memudahkan pengecualian saat membuat paket rilis.
+- `make lint` memeriksa sintaks JavaScript.
+- `make test` menjalankan `tests/run.js`; tiap berkas test dijalankan pada
+  proses GJS terpisah.
+- `make schemas` mengompilasi skema GSettings.
+- `make pack` membuat arsip ekstensi di `dist/`.
+- `make install` memasang symlink lokal dan mengompilasi skema.
+- `make headless` menjalankan GNOME Shell headless bersama fake Spotify pada
+  sesi D-Bus privat.
 
-### `schemas/gschemas.compiled` berhenti di-commit
+Shell mengimpor modul JavaScript sebagai ESM, sehingga proyek tidak
+membutuhkan bundler untuk pemuatan kode saat ini. `stylesheet.css` tetap satu
+file di root karena itulah stylesheet yang dimuat ekstensi.
 
-Sekarang ikut ter-commit sebagai binari 918 byte. Seharusnya dihasilkan oleh build. Konsekuensi: fresh clone perlu `make schemas` sebelum symlink dipakai — itu langkah instalasi standar ekstensi GNOME, bukan beban tambahan.
+## Prinsip pemeliharaan
 
-## CSS: satu berkas atau dipecah
-
-`stylesheet.css` wajib satu berkas di root, jadi ada dua jalan:
-
-| | A. Satu berkas, dipisah komentar | B. Dipecah + digabung saat build |
-|---|---|---|
-| Berkas | `stylesheet.css` 476 baris | `styles/*.css` → `stylesheet.css` |
-| Dev lewat symlink | langsung jalan | harus `make css` setiap ubah |
-| Risiko | membengkak seiring fitur | lupa build, CSS basi |
-
-**Keputusan: A untuk sekarang.** 476 baris masih terbaca dengan penanda `/* --- card --- */`. Pindah ke B hanya kalau sudah melewati ~700 baris; menambah build step untuk CSS saat ini belum sepadan.
-
-## Infrastruktur
-
-### `.gitignore`
-
-```
-schemas/gschemas.compiled
-*.zip
-dist/
-.build/
-```
-
-### `Makefile`
-
-```
-make schemas   # glib-compile-schemas schemas/
-make test      # gjs -m tests/run.js
-make lint      # node --check untuk semua js
-make pack      # zip rilis, tanpa docs/ dev/ tests/
-make install   # symlink + compile schema
-make headless  # dbus-run-session + fake-spotify + shell --headless
-make clean     # hapus artefak build
-```
-
-### `tests/run.js`
-
-Runner tunggal yang mengimpor semua `*.test.js` dan melaporkan hasil. Sekarang tes harus dijalankan satu per satu (`gjs -m test-lrc.js`, dan seterusnya) — itu tidak akan diskalakan begitu jumlahnya bertambah.
-
-## Urutan migrasi
-
-Tiap langkah harus hijau sebelum lanjut: `0 critical`, `0 warning`, semua tes lulus.
-
-| # | Langkah | Risiko | Verifikasi |
-|---|---|---|---|
-| 1 | Infrastruktur: `.gitignore`, `Makefile`, `.editorconfig`, pindah `docs/`, `mockup/`, `tests/` | Nol | `make test` lulus dari lokasi baru |
-| 2 | `core/` + `util/`: pindahkan `mpris`, `lrc`, `stats`, `config`, `volume`, `mic`, `art`, `color`, `path` | Rendah | `make test`, reload bersih |
-| 3 | Pecah `card.js` per panel | **Tinggi** — geometri saling terkait | satu panel per commit, cek ukuran di shell tiap kali |
-| 4 | Pecah `island.js`, ekstrak `paint.js` dan `widgets.js` | Sedang | reload bersih, pill tetap 240×32 |
-| 5 | Pecah `extension.js`, ekstrak `lyrics.js` | Sedang | lirik tetap termuat, statistik tetap tercatat |
-| 6 | Pisah CSS bila sudah perlu | Rendah | tampilan tidak berubah |
-
-Langkah 3 paling berisiko karena `_relayout()`, `_layoutChildren()`, dan `_place()` saling bergantung pada satu set konstanta dan ukuran aktor. Memecahnya sekaligus akan menyulitkan pelacakan kalau ada regresi.
-
-## Yang sengaja tidak dipakai
-
-| Pilihan | Alasan |
-|---|---|
-| Bundler (esbuild, rollup) | Shell memuat ESM asli; bundling menambah lapisan build dan mempersulit baca `journalctl` |
-| `meson` | Dipakai ekstensi besar, tapi untuk proyek seukuran ini `Makefile` ±30 baris lebih mudah dibaca dan tidak menambah dependensi |
-| `dist/` wajib untuk dev | Symlink ke repo harus tetap jalan setelah `make schemas`, supaya loop pengembangan tidak butuh build |
-| TypeScript | Butuh transpile; GJS tidak punya pemeriksaan tipe bawaan dan manfaatnya belum sepadan untuk ~4.300 baris |
-
-## Status eksekusi
-
-Langkah 1–5 sudah dikerjakan di branch `restructure`. Langkah 6 (memisah CSS
-per area) sengaja belum, sesuai keputusan di atas.
-
-| Langkah | Status |
-|---|---|
-| 1. Infrastruktur | selesai |
-| 2. `core/` + `util/` | selesai |
-| 3. Pecah `card.js` | selesai |
-| 4. Pecah `island.js` | selesai |
-| 5. Pecah `extension.js` | selesai |
-| 6. Pisah CSS | ditunda |
-
-Ukuran berkas setelah eksekusi:
-
-| Berkas | Baris |
-|---|---|
-| `src/ui/card/index.js` | 643 |
-| `src/ui/indicator.js` | 591 |
-| `extension.js` | 512 |
-| `src/core/stats.js` | 248 |
-| `src/ui/card/stats-panel.js` | 172 |
-| `src/core/player.js` | 169 |
-| `src/ui/card/head.js` | 145 |
-| `src/ui/card/timer.js` | 124 |
-| `src/core/lyrics.js` | 120 |
-| `src/core/volume.js` | 109 |
-| `src/ui/card/lyrics-panel.js` | 102 |
-| `src/core/settings.js` | 93 |
-| `src/ui/card/footer.js` | 84 |
-| `src/util/color.js` | 64 |
-| `src/util/art.js` | 58 |
-| `src/ui/paint.js` | 56 |
-| `src/core/mic.js` | 52 |
-| `src/core/lrc.js` | 47 |
-| `src/ui/widgets.js` | 30 |
-| `src/util/path.js` | 24 |
-
-Catatan jujur: `card/index.js` (643) dan `indicator.js` (591) masih di atas
-target ~350. Keduanya sekarang satu tanggung jawab — orkestrasi dan geometri —
-jadi pemecahan lebih lanjut akan memisahkan hal yang memang saling terkait
-(relayout, place, event) dan menambah risiko tanpa manfaat jelas. Target
-"~350" ternyata terlalu optimistis untuk dua berkas ini; yang penting
-tanggung jawabnya sudah tunggal.
-
-## Target akhir
-
-| Metrik | Sebelum | Sesudah |
-|---|---|---|
-| Berkas JS terbesar | 1.196 baris | 643 baris |
-| Perintah untuk tes | 4 perintah manual | `make test` |
-| Perintah untuk rilis | manual zip | `make pack` |
-| Berkas runtime di root | 15 | 5 |
-| Artefak build ter-commit | 1 (skema) | 0 |
+- Jaga `extension.js` sebagai penghubung antar-layanan; ekstrak modul ketika
+  ada batas tanggung jawab yang jelas dan dapat diuji.
+- Hindari ketergantungan UI (`St`/`Clutter`) di logika statistik, parser, dan
+  pelacakan playback.
+- Pertahankan pengujian modul core tanpa perlu menjalankan GNOME Shell.
+- Jangan menambah langkah build atau dependensi hanya untuk memecah file tanpa
+  manfaat pemeliharaan yang nyata.
