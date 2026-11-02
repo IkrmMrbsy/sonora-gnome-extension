@@ -1,6 +1,6 @@
 #!/usr/bin/gjs -m
 // Fake Spotify MPRIS player for the nested-shell dev loop.
-// Run inside the nested session bus:  dbus-run-session -- bash -c './dev/fake-spotify.js & gnome-shell --nested --wayland'
+// Run inside the private session bus:  dbus-run-session -- bash -c './dev/fake-spotify.js & gnome-shell --headless --virtual-monitor 1280x800'
 
 import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';

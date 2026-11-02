@@ -1,6 +1,6 @@
 # Struktur Repo
 
-Rencana penataan ulang repositori. Belum dieksekusi — dokumen ini jadi acuan saat pengerjaan dimulai.
+Rencana penataan ulang repositori. Sebagian besar sudah dieksekusi; dokumen ini menjadi acuan struktur akhir.
 
 ## Kenapa perlu ditata
 
@@ -47,12 +47,16 @@ sonora/
 │   │   ├── lyrics.js          # client lrclib, dipisah dari extension.js
 │   │   ├── lrc.js             # parser, tetap
 │   │   ├── stats.js           # model + agregasi mingguan
+│   │   ├── playback.js        # hitungan putar berbasis posisi
+│   │   ├── art.js             # state fetch/cache/retry album art
+│   │   ├── token.js           # token pembatalan request async
 │   │   ├── settings.js        # dari config.js
 │   │   ├── volume.js          # fade, duck, pause-for-mic
 │   │   └── mic.js             # Gvc monitor
 │   │
 │   ├── ui/
 │   │   ├── indicator.js       # dari island.js (~350 baris)
+│   │   ├── geometry.js        # helper geometri kartu dan progress
 │   │   ├── widgets.js         # ellipsize, iconButton, formatClock, formatWeek
 │   │   ├── paint.js           # drawTint, drawArrow, roundedClip
 │   │   └── card/
@@ -80,11 +84,12 @@ sonora/
 │   ├── lrc.test.js
 │   ├── stats.test.js
 │   ├── volume.test.js
-│   └── color.test.js
+│   ├── color.test.js
+│   └── ...                    # test lain per modul
 │
 ├── dev/
 │   ├── fake-spotify.js
-│   └── run-nested.sh          # satu perintah untuk dev loop
+│   └── run-headless.sh        # satu perintah untuk dev loop
 │
 ├── docs/
 │   ├── STRUCTURE.md           # dokumen ini
@@ -162,7 +167,7 @@ make test      # gjs -m tests/run.js
 make lint      # node --check untuk semua js
 make pack      # zip rilis, tanpa docs/ dev/ tests/
 make install   # symlink + compile schema
-make nested    # dbus-run-session + fake-spotify + shell --nested
+make headless  # dbus-run-session + fake-spotify + shell --headless
 make clean     # hapus artefak build
 ```
 

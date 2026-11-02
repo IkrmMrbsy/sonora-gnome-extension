@@ -156,13 +156,13 @@ Deteksi memakai `Gvc` (daftar source output). Kalau `Gvc` tidak tersedia, fitur 
 
 ## Statistik mendengarkan
 
-Disimpan lokal di `~/.local/share/spotify-ext/stats.json` dan ditulis maksimal setiap 30 detik.
+Disimpan lokal di `~/.local/share/spotify-ext/stats.json` dan ditulis maksimal setiap 5 menit. Detail artis/lagu hanya disimpan 10 hari; agregat detik dan jumlah putar per hari disimpan seterusnya.
 
 Yang dicatat:
 
 - total detik per hari
-- detik per artis dan per lagu, per hari maupun keseluruhan
-- jumlah putar per lagu
+- detik per artis dan per lagu, per hari (detail 10 hari terakhir)
+- jumlah putar per lagu, per hari (detail 10 hari terakhir)
 
 Yang ditampilkan di kartu:
 
@@ -171,7 +171,7 @@ Yang ditampilkan di kartu:
 - streak hari berturut-turut saat ini
 - streak terpanjang sepanjang riwayat
 
-Definisi "satu putaran" mengikuti ambang 30 detik seperti Spotify: sebuah lagu dihitung sekali setelah diputar 30 detik. Iklan (artis kosong) tetap menambah total waktu tapi tidak diatribusikan ke artis mana pun.
+Definisi "satu putaran" memakai posisi lagu: sebuah lagu dihitung setelah posisi melewati ambang `min(30 detik, 50% durasi)`. Putar ulang dan seek mundur ke awal akan mengaktifkan ulang hitungan. Iklan (artis kosong) tetap menambah total waktu tapi tidak diatribusikan ke artis mana pun.
 
 ---
 
@@ -208,12 +208,16 @@ sonora/
 │   │   ├── lyrics.js          # client lrclib + cache
 │   │   ├── lrc.js             # parser LRC
 │   │   ├── stats.js           # model statistik + agregasi mingguan
+│   │   ├── playback.js        # hitungan putar berbasis posisi
+│   │   ├── art.js             # state fetch/cache/retry album art
+│   │   ├── token.js           # token pembatalan request async
 │   │   ├── settings.js        # GSettings + migrasi config lama
 │   │   ├── volume.js          # fade, duck, pause-for-mic
 │   │   └── mic.js             # deteksi mikrofon (Gvc)
 │   │
 │   ├── ui/
 │   │   ├── indicator.js       # indikator panel (ikon/pill)
+│   │   ├── geometry.js        # helper geometri kartu dan progress
 │   │   ├── widgets.js         # format waktu, ellipsize, tombol ikon
 │   │   ├── paint.js           # tint radial, panah, clip membulat
 │   │   └── card/
@@ -230,7 +234,7 @@ sonora/
 │       └── path.js            # resolusi folder ekstensi
 │
 ├── tests/                     # tes unit, satu runner
-├── dev/                       # pemutar MPRIS palsu + skrip nested shell
+├── dev/                       # pemutar MPRIS palsu + skrip headless shell
 ├── icons/                     # ikon tambahan (api, bulan)
 └── docs/                      # IDEAS.md, ROADMAP.md, STRUCTURE.md, mockup/
 ```
@@ -254,7 +258,7 @@ Semua perintah pengembangan lewat `Makefile`:
 | `make install` | Symlink ke folder ekstensi + kompilasi skema |
 | `make uninstall` | Hapus symlink |
 | `make pack` | Buat `dist/sonora.zip` untuk rilis |
-| `make nested` | Jalankan shell bersarang dengan pemutar palsu |
+| `make headless` | Jalankan shell headless dengan pemutar palsu |
 | `make clean` | Hapus artefak build |
 | `make help` | Daftar perintah |
 
@@ -264,18 +268,14 @@ make test
 ```
 Setiap berkas `tests/*.test.js` dijalankan di proses `gjs` sendiri, jadi tes yang memakai main loop tidak mengganggu tes lain.
 
-**Shell bersarang** (tidak mengganggu sesi utama):
+**Shell headless** (tidak mengganggu sesi utama):
 ```
-make nested
+make headless
 ```
-`dev/fake-spotify.js` meniru pemutar MPRIS: tiga lagu, posisi berjalan otomatis, serta merespons Play/Pause/Next/Previous/SetPosition/Volume/LoopStatus.
+`dev/fake-spotify.js` meniru pemutar MPRIS: tiga lagu, posisi berjalan otomatis, serta merespons Play/Pause/Next/Previous/SetPosition/Volume/LoopStatus. Hentikan dengan Ctrl-C.
 
 **Muat ulang setelah mengubah kode:**
-```
-gnome-extensions disable spotify-ext@ikram
-gnome-extensions enable spotify-ext@ikram
-```
-Setelah mengubah `metadata.json` atau menambah key skema, logout/login diperlukan.
+Pada Wayland GNOME Shell 50 tidak ada hot reload JavaScript. `gnome-extensions disable/enable` hanya memuat ulang CSS; perubahan JS butuh logout/login. Setelah mengubah `metadata.json` atau menambah key skema, logout/login juga diperlukan.
 
 **Log:**
 ```
@@ -286,9 +286,8 @@ journalctl --user -f | grep -i sonora
 
 ## Batasan yang diketahui
 
-- **Hitungan putaran belum akurat.** Lagu yang diulang tanpa berganti judul dihitung sekali; jeda lalu lanjut pada lagu yang sama bisa dihitung dua kali; lagu di bawah 30 detik tidak pernah terhitung; dan bila timer sinkronisasi tertunda, detik yang hilang dibatasi maksimal 2 detik per tick sehingga ambang 30 detik bisa tidak tercapai. Total waktu (detik) tetap akurat.
 - **Streak terpanjang dihitung ulang dari riwayat hari** setiap kali kartu diperbarui. Murah untuk data kecil, tapi linier terhadap jumlah hari.
-- **Riwayat harian tidak dipangkas** — tumbuh satu entri per hari pemakaian.
+- **Detail harian dibatasi 10 hari** — `days[].artists` dan `days[].tracks` yang lebih lama dipangkas; total detik dan jumlah putar per hari tetap disimpan.
 - **Blur latar tidak tersedia** di GNOME Shell. Efek "kaca buram" di mockup diganti gradient Cairo, jadi hasilnya lebih tegas, bukan benar-benar blur.
 - **Desaturasi cover saat pause** tidak bisa lewat CSS karena album art adalah konten gambar; yang dipakai adalah penurunan opacity.
 - **Hanya Spotify.** Bus MPRIS ditulis tetap ke `org.mpris.MediaPlayer2.spotify`; pemutar lain tidak terdeteksi.

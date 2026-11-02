@@ -4,7 +4,7 @@ DIST       := dist
 SCHEMA_DIR := schemas
 SOURCES    := extension.js prefs.js src
 
-.PHONY: all help schemas lint test pack install uninstall nested clean
+.PHONY: all help schemas lint test pack install uninstall headless clean
 
 all: lint test schemas
 
@@ -17,7 +17,7 @@ help:
 	@echo "  make pack       Build $(DIST)/$(NAME).zip for release"
 	@echo "  make install    Symlink into the extensions dir and compile the schema"
 	@echo "  make uninstall  Remove the symlink"
-	@echo "  make nested     Run a nested shell with the fake Spotify player"
+	@echo "  make headless   Run a headless shell with the fake Spotify player"
 	@echo "  make clean      Remove build output"
 
 schemas:
@@ -54,8 +54,8 @@ uninstall:
 	@rm -f ~/.local/share/gnome-shell/extensions/$(UUID)
 	@echo "removed $(UUID)"
 
-nested: schemas
-	@dbus-run-session -- bash -c './dev/fake-spotify.js & gnome-shell --nested --wayland'
+headless: schemas
+	@./dev/run-headless.sh
 
 clean:
 	@rm -rf $(DIST)
