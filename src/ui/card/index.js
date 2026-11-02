@@ -4,6 +4,7 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import {clampStatsHeight} from '../geometry.js';
 import {drawArrow, drawRadialTint, surfaceScale} from '../paint.js';
 import {CardHead} from './head.js';
 import {CardTimer} from './timer.js';
@@ -19,7 +20,8 @@ const ARROW = 12;
 const HOVER_CLOSE_MS = 320;
 
 const LYRICS_W = 300;
-const STATS_H = 256;
+const STATS_MIN_H = 160;
+const STATS_MAX_H = 360;
 const STATS_GRID_GAP = 14;
 
 const LEFT_W = CARD_WIDTH - PADDING * 2;
@@ -180,8 +182,12 @@ export class NowPlayingCard {
     return this._lyricsOpen ? LYRICS_W : 0;
   }
 
-  _statsHeight() {
-    return this._statsOpen ? STATS_H : 0;
+  _statsHeight(width = this._targetW) {
+    if (!this._statsOpen)
+      return 0;
+
+    const natural = this._stats.measure(PADDING, width, STATS_GRID_GAP);
+    return clampStatsHeight(natural, STATS_MIN_H, STATS_MAX_H);
   }
 
   _measureContent() {
@@ -198,7 +204,7 @@ export class NowPlayingCard {
     this._contentH = contentH;
 
     const width = CARD_WIDTH + this._lyricsWidth();
-    const height = contentH + PADDING * 2 + this._statsHeight();
+    const height = contentH + PADDING * 2 + this._statsHeight(width);
     const changed = width !== this._targetW || height !== this._targetH;
 
     this._targetW = width;
@@ -255,7 +261,7 @@ export class NowPlayingCard {
     const width = this._actor.width;
     const height = this._actor.height;
 
-    this._tab.set_position(width - 9, Math.round((height - this._statsHeight()) / 2) - 28);
+    this._tab.set_position(width - 9, Math.round((height - this._statsHeight(width)) / 2) - 28);
     this._stab.set_position(Math.round(width / 2) - 28, height - 9);
   }
 

@@ -22,6 +22,13 @@ export class LyricsPanel {
       y_expand: true,
     });
 
+    this._divider = new St.Widget({
+      style_class: 'sonora-lyrics-divider',
+      width: 1,
+      height: 0,
+    });
+    this.actor.add_child(this._divider);
+
     this._inner = new St.BoxLayout({
       vertical: true,
       style_class: 'sonora-lyrics-inner',
@@ -59,6 +66,10 @@ export class LyricsPanel {
   }
 
   layout(contentHeight) {
+    const dividerHeight = Math.max(0, Math.round(contentHeight / 2));
+    this._divider.set_size(1, dividerHeight);
+    this._divider.set_position(0, Math.max(0, Math.round((contentHeight - dividerHeight) / 2)));
+
     this._inner.set_size(this.width, contentHeight);
     const [, innerHeight] = this._inner.get_preferred_height(this.width);
     this._inner.set_position(0, Math.max(0, Math.round((contentHeight - innerHeight) / 2)));

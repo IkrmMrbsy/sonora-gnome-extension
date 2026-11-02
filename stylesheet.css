@@ -206,8 +206,6 @@
   text-align: right;
 }
 
-.sonora-bar {
-}
 
 .sonora-bar-track {
   border-radius: 2px;
@@ -271,8 +269,11 @@
 /* ---------- lyrics drawer (opens to the right) ---------- */
 
 .sonora-lyrics-panel {
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
   background-color: rgba(255, 255, 255, 0.015);
+}
+
+.sonora-lyrics-divider {
+  background-color: rgba(255, 255, 255, 0.10);
 }
 
 .sonora-lyrics-inner {
@@ -312,6 +313,10 @@
    with the footer rule instead of running edge to edge. */
 .sonora-stats-wrap {
   background-color: rgba(255, 255, 255, 0.015);
+}
+
+.sonora-stats-scroll {
+  background-color: transparent;
 }
 
 .sonora-stats {
@@ -390,9 +395,6 @@
   spacing: 4px;
 }
 
-.sonora-stat-row {
-  spacing: 5px;
-}
 
 .sonora-stats-coltitle {
   font-size: 8.5px;
@@ -451,8 +453,6 @@
   color: #ffffff;
 }
 
-.sonora-tab-icon {
-}
 
 .sonora-stab {
   min-width: 56px;
@@ -470,7 +470,4 @@
 
 .sonora-stab.active {
   color: #ffffff;
-}
-
-.sonora-stab-icon {
 }

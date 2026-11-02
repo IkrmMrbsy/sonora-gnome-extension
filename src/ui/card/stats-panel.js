@@ -1,5 +1,6 @@
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
+import Pango from 'gi://Pango';
 import St from 'gi://St';
 
 import {ellipsize, formatWeek} from '../widgets.js';
@@ -19,6 +20,14 @@ export class StatsPanel {
     });
 
     this._box = new St.BoxLayout({vertical: true, style_class: 'sonora-stats'});
+    this._scroll = new St.ScrollView({
+      style_class: 'sonora-stats-scroll',
+      hscrollbar_policy: St.PolicyType.NEVER,
+      vscrollbar_policy: St.PolicyType.AUTOMATIC,
+      overlay_scrollbars: true,
+      enable_mouse_scrolling: true,
+      child: this._box,
+    });
 
     const head = new St.BoxLayout({style_class: 'sonora-stats-head'});
     this._title = new St.Label({text: 'STATISTICS', style_class: 'sonora-stats-title'});
@@ -28,6 +37,10 @@ export class StatsPanel {
       x_expand: true,
       x_align: Clutter.ActorAlign.END,
     });
+    // These two are short, fixed labels. Leave ellipsizing off so Pango does
+    // not trim them when the allocation matches their natural width.
+    this._title.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
+    this._period.clutter_text.ellipsize = Pango.EllipsizeMode.NONE;
     head.add_child(this._title);
     head.add_child(this._period);
 
@@ -74,21 +87,37 @@ export class StatsPanel {
     this._box.add_child(this._grid);
     this._box.add_child(this._activeLabel);
 
-    this.actor.add_child(this._box);
+    this.actor.add_child(this._scroll);
+  }
+
+  _setColumnWidths(innerWidth, gap) {
+    const colWidth = Math.max(1, Math.round((innerWidth - gap) / 2));
+    this._artistsCol.set_width(colWidth);
+    this._tracksCol.set_width(colWidth);
+  }
+
+  measure(x, width, gap) {
+    const innerWidth = Math.max(1, width - x * 2);
+    this._setColumnWidths(innerWidth, gap);
+    this._box.set_width(innerWidth);
+    const [, natural] = this._box.get_preferred_height(innerWidth);
+    return Math.max(1, natural);
   }
 
   // Position the inner box inside the drawer rectangle.
   layout(x, y, width, height, gap) {
-    this.actor.set_position(x, y);
+    this.actor.set_position(0, y);
     this.actor.set_size(width, height);
 
     const innerWidth = Math.max(1, width - x * 2);
-    this._box.set_position(x, 0);
-    this._box.set_size(innerWidth, height > 0 ? height : 1);
+    const visibleHeight = height > 0 ? height : 1;
+    const [, natural] = this._box.get_preferred_height(innerWidth);
 
-    const colWidth = Math.max(1, Math.round((innerWidth - gap) / 2));
-    this._artistsCol.set_width(colWidth);
-    this._tracksCol.set_width(colWidth);
+    this._setColumnWidths(innerWidth, gap);
+    this._box.set_position(0, 0);
+    this._box.set_size(innerWidth, Math.max(visibleHeight, natural));
+    this._scroll.set_position(x, 0);
+    this._scroll.set_size(innerWidth, visibleHeight);
   }
 
   applyAccent([r, g, b]) {
@@ -160,7 +189,6 @@ export class StatsPanel {
         text: formatValue(entry),
         style_class: 'sonora-stat-value',
       });
-      value.set_width(38);
       value.set_x_align(Clutter.ActorAlign.END);
 
       row.add_child(rank);

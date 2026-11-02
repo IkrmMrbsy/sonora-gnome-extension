@@ -1,6 +1,7 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
+import {progressGeometry} from '../geometry.js';
 import {formatClock} from '../widgets.js';
 
 const BAR_HEIGHT = 3;
@@ -96,14 +97,13 @@ export class CardTimer {
   }
 
   render() {
-    const width = this._bar.width || 300;
-    const pct = this._duration > 0
-      ? Math.min(1, Math.max(0, this._position / this._duration))
-      : 0;
+    const {width, fillWidth, knobX} = progressGeometry(
+      this.actor.width, this._cur.width, this._dur.width,
+      this._position, this._duration, this._knob.width || 9);
 
     this._track.set_width(width);
-    this._fill.set_width(Math.round(width * pct));
-    this._knob.set_position(Math.round(width * pct) - 4, 2);
+    this._fill.set_width(fillWidth);
+    this._knob.set_position(knobX, 2);
     this._cur.text = formatClock(this._position);
     this._dur.text = formatClock(this._duration);
   }
