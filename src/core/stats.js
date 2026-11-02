@@ -1,4 +1,4 @@
-export const VERSION = 3;
+export const VERSION = 4;
 
 function emptyDay() {
   return {seconds: 0, plays: 0, artists: {}, tracks: {}};
@@ -36,8 +36,6 @@ export function emptyStats() {
     version: VERSION,
     total: 0,
     days: {},
-    tracks: {},
-    artists: {},
   };
 }
 
@@ -49,8 +47,6 @@ export function normalizeStats(raw) {
   stats.total = Number(raw.total) || 0;
   for (const [key, value] of Object.entries(raw.days ?? {}))
     stats.days[key] = normalizeDay(value);
-  stats.tracks = {...(raw.tracks ?? {})};
-  stats.artists = {...(raw.artists ?? {})};
 
   return stats;
 }
@@ -77,26 +73,20 @@ export function addListen(stats, {artist, title, seconds, day}) {
 
   const bucket = stats.days[day] ?? emptyDay();
   bucket.seconds += seconds;
-  if (artist)
+  if (artist) {
     bucket.artists[artist] = (bucket.artists[artist] ?? 0) + seconds;
-  const dayTrack = bucket.tracks[key] ?? {seconds: 0, plays: 0};
-  dayTrack.seconds += seconds;
-  bucket.tracks[key] = dayTrack;
+    const dayTrack = bucket.tracks[key] ?? {seconds: 0, plays: 0};
+    dayTrack.seconds += seconds;
+    bucket.tracks[key] = dayTrack;
+  }
   stats.days[day] = bucket;
-
-  const track = stats.tracks[key] ?? {seconds: 0, plays: 0};
-  track.seconds += seconds;
-  stats.tracks[key] = track;
-
-  if (artist)
-    stats.artists[artist] = (stats.artists[artist] ?? 0) + seconds;
 }
 
 export function addPlay(stats, {artist, title, day}) {
+  if (!artist)
+    return;
+
   const key = trackKey(artist, title);
-  const track = stats.tracks[key] ?? {seconds: 0, plays: 0};
-  track.plays += 1;
-  stats.tracks[key] = track;
 
   if (day) {
     const bucket = stats.days[day] ?? emptyDay();
@@ -106,6 +96,33 @@ export function addPlay(stats, {artist, title, day}) {
     bucket.tracks[key] = dayTrack;
     stats.days[day] = bucket;
   }
+}
+
+export const DETAIL_DAYS = 10;
+
+export function pruneStats(stats, now = new Date(), keepDays = DETAIL_DAYS) {
+  if (!stats?.days || !(keepDays > 0))
+    return false;
+
+  const cutoff = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (keepDays - 1));
+  const cutoffKey = dayKey(cutoff);
+  let changed = false;
+
+  for (const [key, day] of Object.entries(stats.days)) {
+    if (key >= cutoffKey || !day || typeof day !== 'object')
+      continue;
+
+    if ('artists' in day) {
+      delete day.artists;
+      changed = true;
+    }
+    if ('tracks' in day) {
+      delete day.tracks;
+      changed = true;
+    }
+  }
+
+  return changed;
 }
 
 function daySeconds(days, key) {
@@ -235,7 +252,8 @@ export function weekTracks(stats, now = new Date(), limit = 5) {
         title: split === -1 ? entry.key : entry.key.slice(split + TRACK_SEPARATOR.length),
       };
     })
-    .sort((a, b) => b.seconds - a.seconds)
+    .filter(entry => entry.artist)
+    .sort((a, b) => (b.plays - a.plays) || (b.seconds - a.seconds))
     .slice(0, limit);
 }
 

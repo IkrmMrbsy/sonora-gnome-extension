@@ -11,6 +11,8 @@ Dokumen ini hanya berisi rencana eksekusi.
 
 **Prioritas: tertinggi — fondasi semua fitur statistik**
 
+**Status:** selesai di batch 5. Bagian "Kondisi sekarang" dipertahankan sebagai catatan masalah awal.
+
 ### Kondisi sekarang
 
 Hitungan "berapa kali lagu diputar" tidak bisa dipercaya. Sudah dibuktikan lewat simulasi yang meniru `_accumulate()` persis:
@@ -118,7 +120,7 @@ Sekarang file ditulis ulang penuh setiap 30 detik selama musik menyala (120×/ja
 
 Dijalankan **sekali sehari** saat tanggal berganti, bukan di jalur panas. Untuk setiap hari yang lebih tua dari 10 hari: hapus `artists` dan `tracks`, sisakan `seconds` dan `plays`. Biaya beberapa milidetik.
 
-`version` naik ke 3 untuk migrasi. Data lama tidak bisa dipulihkan detailnya — hanya agregat harian yang bertahan.
+`version` naik ke 4 saat pruning detail diterapkan. Data lama tidak bisa dipulihkan detailnya — hanya agregat harian yang bertahan.
 
 ### Isi halaman statistik
 
@@ -143,7 +145,7 @@ Catatan implementasi: `days[].tracks` kini menyimpan `{seconds, plays}` (bukan a
 
 1. **Buang `stats.artists` + `stats.tracks` level atas** — memotong 59% file saat ini, nol risiko, tidak mengubah skema
 2. **Simpan tiap 5 menit** — memotong 90% beban disk, tidak mengubah skema
-3. **Prune detail ke 10 hari** — menaikkan `version` ke 3, perlu migrasi
+3. **Prune detail ke 10 hari** — menaikkan `version` ke 4, perlu migrasi
 
 Langkah 1 dan 2 tidak menyentuh struktur data, jadi aman dikerjakan lebih dulu.
 
@@ -212,10 +214,10 @@ Nomor 1–3 sebaiknya berurutan: statistik yang belum akurat tidak layak ditampi
 
 ## Catatan teknis yang perlu diingat
 
-- Data disimpan di `~/.local/share/spotify-ext/stats.json`. Saat ini ditulis tiap 30 detik; target 5 menit.
+- Data disimpan di `~/.local/share/spotify-ext/stats.json`. Ditulis tiap 5 menit dan detail dipangkas ke 10 hari.
 - Jalur berkas di dokumen ini memakai struktur baru: `src/core/` untuk logika, `src/ui/` untuk tampilan.
 - Model data punya `version` untuk migrasi; perubahan bentuk data wajib menaikkannya.
-- Saat ini **belum ada pemangkasan**. File tumbuh selamanya — proyeksi dan rencana pemangkasan ada di poin 3.
-- `stats.artists` dan `stats.tracks` di level atas hanya ditulis, tidak pernah dibaca UI — kandidat dibuang.
+- Pemangkasan detail 10 hari sudah berjalan saat tanggal berganti; agregat harian tetap disimpan.
+- `stats.artists` dan `stats.tracks` di level atas sudah dibuang; UI hanya memakai agregasi mingguan dari `days`.
 - `bestStreak()` menghitung ulang dari seluruh riwayat setiap kali kartu diperbarui — murah untuk data sekarang, tapi linier terhadap jumlah hari.
 - Lagu dengan artis kosong (iklan) menambah total waktu tanpa atribusi artis. Perlakuan ini disengaja.
