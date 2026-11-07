@@ -20,6 +20,20 @@
       <summary>Panel position</summary>
       <description>Where the indicator sits in the top panel.</description>
     </key>
+    <key name="card-bg" type="s">
+      <choices>
+        <choice value="album"/>
+        <choice value="solid"/>
+      </choices>
+      <default>'album'</default>
+      <summary>Card background</summary>
+      <description>Follow the album art accent, or use a solid background preset.</description>
+    </key>
+    <key name="card-bg-color" type="s">
+      <default>'midnight'</default>
+      <summary>Background preset</summary>
+      <description>Solid palette used by the now-playing card and the panel pill.</description>
+    </key>
     <key name="card-open" type="s">
       <choices>
         <choice value="hover"/>

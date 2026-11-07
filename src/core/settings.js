@@ -57,6 +57,8 @@ export function loadConfig() {
   return {
     mode: settings.get_string('mode'),
     position: settings.get_string('position'),
+    cardBg: settings.get_string('card-bg'),
+    cardBgColor: settings.get_string('card-bg-color'),
     cardOpen: settings.get_string('card-open'),
     hoverDelay: settings.get_int('hover-delay'),
     duckMode: settings.get_string('duck-mode'),

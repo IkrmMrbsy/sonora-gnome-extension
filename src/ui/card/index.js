@@ -4,6 +4,12 @@ import St from 'gi://St';
 
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
+import {
+  DEFAULT_PRESET_ID,
+  cssRgba,
+  hexToRgb,
+  presetById,
+} from '../../util/palette.js';
 import {clampStatsHeight} from '../geometry.js';
 import {drawArrow, drawRadialTint, surfaceScale} from '../paint.js';
 import {CardHead} from './head.js';
@@ -36,6 +42,9 @@ export class NowPlayingCard {
   constructor(callbacks = {}) {
     this._callbacks = callbacks;
     this._accent = [53, 132, 228];
+    this._albumAccent = [53, 132, 228];
+    this._bgMode = 'album';
+    this._bgPreset = presetById(DEFAULT_PRESET_ID);
     this._pixbuf = null;
     this._lyricsVisible = true;
     this._open = false;
@@ -526,6 +535,9 @@ export class NowPlayingCard {
   // ---------- drawing ----------
 
   _drawTint(area) {
+    if (this._bgMode === 'solid')
+      return;
+
     const cr = area.get_context();
     const {width, height} = area;
     if (!width || !height)
@@ -538,11 +550,15 @@ export class NowPlayingCard {
 
   _drawArrow(area) {
     const cr = area.get_context();
+    const background = this._bgMode === 'solid'
+      ? hexToRgb(this._bgPreset.bg)
+      : [13, 13, 18];
     drawArrow(cr, {
       width: ARROW,
       height: GAP,
       rgb: this._accent,
       scale: surfaceScale(area, ARROW),
+      background,
     });
   }
 
@@ -555,30 +571,51 @@ export class NowPlayingCard {
   }
 
   setAccent(rgb) {
+    this._albumAccent = rgb;
+    if (this._bgMode === 'solid')
+      return;
+
     this._accent = rgb;
+    this._applyAccent();
+  }
+
+  setBackground(mode, preset) {
+    this._bgMode = mode === 'solid' ? 'solid' : 'album';
+    this._bgPreset = preset ?? presetById(DEFAULT_PRESET_ID);
+    this._accent = this._bgMode === 'solid'
+      ? hexToRgb(this._bgPreset.accent)
+      : this._albumAccent;
     this._applyAccent();
   }
 
   _applyAccent() {
     const [r, g, b] = this._accent;
     const rgba = alpha => `rgba(${r},${g},${b},${alpha})`;
+    const solid = this._bgMode === 'solid';
+    const bgStyle = solid
+      ? `background-color: ${cssRgba(this._bgPreset.bg, 0.94)}; `
+      : '';
+    const tabBg = solid ? cssRgba(this._bgPreset.bg, 0.94) : 'rgba(20,20,26,0.94)';
 
     // Neutral shadow: an accent-tinted one read as a neon glow. St accepts a
     // single box-shadow per node, so it stays one declaration.
     this._actor.set_style(
-      `border: 1px solid ${rgba(0.40)}; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.40);`);
+      `${bgStyle}border: 1px solid ${rgba(0.40)}; ` +
+      'box-shadow: 0 6px 16px rgba(0, 0, 0, 0.40);');
 
     this._footer.applyAccent(this._accent, rgba);
     this._stats.applyAccent(this._accent);
     this._tab?.set_style(
-      `background-color: rgba(20,20,26,0.94); border-color: ${rgba(0.42)};`);
+      `background-color: ${tabBg}; border-color: ${rgba(0.42)};`);
     this._stab?.set_style(
-      `background-color: rgba(20,20,26,0.94); border-color: ${rgba(0.42)};`);
+      `background-color: ${tabBg}; border-color: ${rgba(0.42)};`);
 
     if (!this._pixbuf)
       this._head.setPlaceholder(`background-color: ${rgba(0.28)};`);
 
-    this._tint.queue_repaint();
+    this._tint.visible = !solid;
+    if (!solid)
+      this._tint.queue_repaint();
     this._arrow.queue_repaint();
   }
 

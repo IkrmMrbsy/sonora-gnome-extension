@@ -7,6 +7,7 @@ import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
 import {setArtImage} from '../util/art.js';
+import {cssRgba, hexToRgb, presetById} from '../util/palette.js';
 import {drawRadialTint, roundedClip, surfaceScale} from './paint.js';
 import {formatClock} from './widgets.js';
 import {NowPlayingCard} from './card/index.js';
@@ -25,6 +26,7 @@ export class SonoraIndicator {
 
     this._pixbuf = null;
     this._accent = [53, 132, 228];
+    this._albumAccent = [53, 132, 228];
     this._sleep = 0;
     this._duck = false;
     this._hasTrack = false;
@@ -55,7 +57,7 @@ export class SonoraIndicator {
     this._buildPanel();
     this._applyMode();
     this._place();
-    this._applyAccent();
+    this._applyBackground();
     this._updateSlot();
   }
 
@@ -339,9 +341,22 @@ export class SonoraIndicator {
       this._card?.close(false);
     this._applyMode();
     this._place();
+    this._applyBackground();
+  }
+
+  _applyBackground() {
+    const solid = this._config.cardBg === 'solid';
+    const preset = presetById(this._config.cardBgColor);
+    this._accent = solid ? hexToRgb(preset.accent) : this._albumAccent;
+    this._applyAccent();
+    this._card?.setBackground(this._config.cardBg, preset);
+    this._card?.setAccent(this._albumAccent);
   }
 
   _drawTint(area) {
+    if (this._config.cardBg === 'solid')
+      return;
+
     const cr = area.get_context();
     const width = area.width;
     const height = area.height;
@@ -368,8 +383,13 @@ export class SonoraIndicator {
   _applyAccent() {
     const [r, g, b] = this._accent;
     const rgba = alpha => `rgba(${r},${g},${b},${alpha})`;
+    const solid = this._config.cardBg === 'solid';
+    const preset = presetById(this._config.cardBgColor);
+    const bgStyle = solid
+      ? `background-color: ${cssRgba(preset.bg, 0.94)}; `
+      : '';
 
-    this._pillBox.set_style(`border-color: ${rgba(0.45)};`);
+    this._pillBox.set_style(`${bgStyle}border-color: ${rgba(0.45)};`);
     // Only the sleep/duck state gets a chip surface; the countdown stays plain.
     this._pillSlotStateStyle =
       `background-color: ${rgba(0.18)}; border: 1px solid ${rgba(0.55)};` +
@@ -381,7 +401,9 @@ export class SonoraIndicator {
     if (!this._pixbuf)
       this._pillCover.set_style(`background-color: ${rgba(0.35)};`);
 
-    this._pillTint.queue_repaint();
+    this._pillTint.visible = !solid;
+    if (!solid)
+      this._pillTint.queue_repaint();
   }
 
   _renderArt() {
@@ -408,8 +430,11 @@ export class SonoraIndicator {
     if (this._destroyed)
       return;
 
-    this._accent = rgb;
-    this._applyAccent();
+    this._albumAccent = rgb;
+    if (this._config.cardBg !== 'solid') {
+      this._accent = rgb;
+      this._applyAccent();
+    }
     this._card?.setAccent(rgb);
   }
 

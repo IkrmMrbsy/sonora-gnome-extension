@@ -28,8 +28,15 @@ export function drawRadialTint(cr, width, height, rgb, {
   cr.paint();
 }
 
-export function drawArrow(cr, {width, height, rgb, scale = 1}) {
+export function drawArrow(cr, {
+  width,
+  height,
+  rgb,
+  scale = 1,
+  background = [13, 13, 18],
+}) {
   const [r, g, b] = rgb;
+  const [br, bg, bb] = background;
   const w = width * scale;
   const h = height * scale;
 
@@ -37,7 +44,7 @@ export function drawArrow(cr, {width, height, rgb, scale = 1}) {
   cr.lineTo(w / 2, 0);
   cr.lineTo(w, h);
   cr.closePath();
-  cr.setSourceRGBA(13 / 255, 13 / 255, 18 / 255, 0.94);
+  cr.setSourceRGBA(br / 255, bg / 255, bb / 255, 0.94);
   cr.fillPreserve();
   cr.setSourceRGBA(r / 255, g / 255, b / 255, 0.42);
   cr.setLineWidth(1 * scale);
