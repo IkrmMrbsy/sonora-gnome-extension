@@ -20,9 +20,13 @@ const ARROW = 12;
 const HOVER_CLOSE_MS = 320;
 
 const LYRICS_W = 300;
+// Space between the left column's content and the divider, so right-aligned
+// labels (duration, "best Nd") stop touching the lyrics seam.
+const LYRICS_GAP = PADDING;
 const STATS_MIN_H = 160;
 const STATS_MAX_H = 360;
 const STATS_GRID_GAP = 14;
+const SCREEN_MARGIN = 12;
 
 const LEFT_W = CARD_WIDTH - PADDING * 2;
 
@@ -187,7 +191,23 @@ export class NowPlayingCard {
       return 0;
 
     const natural = this._stats.measure(PADDING, width, STATS_GRID_GAP);
-    return clampStatsHeight(natural, STATS_MIN_H, STATS_MAX_H);
+    return clampStatsHeight(natural, STATS_MIN_H, this._statsMaxHeight());
+  }
+
+  // Let the drawer use every pixel available between the panel and the bottom
+  // of the monitor, so the stats are fully visible without scrolling.
+  _statsMaxHeight() {
+    const monitor = this._anchor
+      ? Main.layoutManager.findMonitorForActor(this._anchor)
+      : null;
+    const usable = monitor ?? Main.layoutManager.primaryMonitor;
+    if (!usable)
+      return STATS_MAX_H;
+
+    const top = usable.y + Main.panel.height + GAP;
+    const bottom = usable.y + usable.height - SCREEN_MARGIN;
+    const bodyH = this._contentH + PADDING * 2;
+    return Math.max(STATS_MIN_H, bottom - top - bodyH);
   }
 
   _measureContent() {
@@ -234,17 +254,18 @@ export class NowPlayingCard {
     const contentH = this._contentH;
     const bodyH = contentH + PADDING * 2;
     const lyricsW = Math.max(0, width - CARD_WIDTH);
+    const gutter = lyricsW > 0 ? LYRICS_GAP : 0;
 
     this._tint.set_position(0, 0);
     this._tint.set_size(width, height);
 
     this._cols.set_position(PADDING, PADDING);
-    this._cols.set_size(Math.max(1, LEFT_W + lyricsW), contentH);
+    this._cols.set_size(Math.max(1, LEFT_W + gutter + lyricsW), contentH);
 
     this._left.set_position(0, 0);
     this._left.set_size(LEFT_W, contentH);
 
-    this._lyrics.actor.set_position(LEFT_W, 0);
+    this._lyrics.actor.set_position(LEFT_W + gutter, 0);
     this._lyrics.actor.set_size(Math.max(0, lyricsW), contentH);
     this._lyrics.layout(contentH);
 
