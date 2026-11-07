@@ -89,6 +89,15 @@
   opacity: 0.55;
 }
 
+/* The state chip explains why playback paused, so keep it readable. */
+.sonora-pill.paused .sonora-slot.is-state .sonora-slot-text {
+  color: #f4f2ef;
+}
+
+.sonora-pill.paused .sonora-slot.is-state .sonora-slot-icon {
+  opacity: 1;
+}
+
 .sonora-pill.paused .sonora-title {
   color: rgba(244, 242, 239, 0.55);
 }
