@@ -388,6 +388,10 @@ export class NowPlayingCard {
     return this._open;
   }
 
+  isPointerOver() {
+    return this._open && this._pointerStillOnCard();
+  }
+
   scheduleClose() {
     this._cancelClose();
     this._closeTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, HOVER_CLOSE_MS, () => {

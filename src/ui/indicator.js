@@ -39,7 +39,6 @@ export class SonoraIndicator {
     this._pillHeight = 0;
 
     this._openTimer = 0;
-    this._insideButton = false;
     this._lastPosition = null;
     this._panelWidthId = 0;
 
@@ -160,13 +159,12 @@ export class SonoraIndicator {
     this._panelBox.add_child(this._pillBox);
 
     this._button.connect('enter-event', () => {
-      this._insideButton = true;
+      this._cancelClose();
       if (this._cardOpenMode() !== 'click')
         this._scheduleOpen();
       return Clutter.EVENT_PROPAGATE;
     });
     this._button.connect('leave-event', () => {
-      this._insideButton = false;
       this._scheduleClose();
       return Clutter.EVENT_PROPAGATE;
     });
@@ -195,6 +193,20 @@ export class SonoraIndicator {
     this._card?.open(this._button, this._config.position);
   }
 
+  _pointerOver(actor) {
+    if (!actor || !actor.visible)
+      return false;
+
+    const [px, py] = global.get_pointer();
+    const [ax, ay] = actor.get_transformed_position();
+    const [aw, ah] = actor.get_size();
+    return px >= ax && px < ax + aw && py >= ay && py < ay + ah;
+  }
+
+  _pointerOverButton() {
+    return this._pointerOver(this._button?.container);
+  }
+
   _scheduleOpen() {
     if (this._card?.isOpen())
       return;
@@ -203,14 +215,14 @@ export class SonoraIndicator {
     const delay = Math.max(0, this._config.hoverDelay ?? 400);
     this._openTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
       this._openTimer = 0;
-      if (this._insideButton)
+      if (this._pointerOverButton())
         this._card?.open(this._button, this._config.position);
       return GLib.SOURCE_REMOVE;
     });
   }
 
   _scheduleClose() {
-    if (this._insideButton)
+    if (this._pointerOverButton() || this._card?.isPointerOver())
       return;
     this._card?.scheduleClose();
   }
