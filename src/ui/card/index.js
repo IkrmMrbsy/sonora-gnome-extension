@@ -698,6 +698,7 @@ export class NowPlayingCard {
     this._cancelClose();
     this._cancelPointerExit();
     this._releaseEvents();
+    this._timer.destroy();
 
     if (this._overviewId) {
       Main.overview.disconnect(this._overviewId);

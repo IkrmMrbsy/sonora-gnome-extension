@@ -14,6 +14,7 @@ export class CardTimer {
     this._position = 0;
     this._duration = 0;
     this._seeking = false;
+    this._stageEventId = 0;
 
     this.actor = new St.BoxLayout({
       style_class: 'sonora-timerow',
@@ -55,8 +56,7 @@ export class CardTimer {
     this._bar.connect('button-press-event', (actor, event) => {
       if (event.get_button() !== 1)
         return Clutter.EVENT_PROPAGATE;
-      this._seeking = true;
-      this._bar.add_style_class_name('dragging');
+      this._startSeeking();
       this._seekFromEvent(event);
       return Clutter.EVENT_STOP;
     });
@@ -64,13 +64,16 @@ export class CardTimer {
     this._bar.connect('motion-event', (actor, event) => {
       if (!this._seeking)
         return Clutter.EVENT_PROPAGATE;
+      if (!(event.get_state() & Clutter.ModifierType.BUTTON1_MASK)) {
+        this._finishSeeking();
+        return Clutter.EVENT_PROPAGATE;
+      }
       this._seekFromEvent(event);
       return Clutter.EVENT_STOP;
     });
 
     this._bar.connect('button-release-event', () => {
-      this._seeking = false;
-      this._bar.remove_style_class_name('dragging');
+      this._finishSeeking();
       return Clutter.EVENT_STOP;
     });
 
@@ -81,6 +84,35 @@ export class CardTimer {
 
   get seeking() {
     return this._seeking;
+  }
+
+  destroy() {
+    this._finishSeeking();
+  }
+
+  _startSeeking() {
+    if (this._seeking)
+      return;
+
+    this._seeking = true;
+    this._bar.add_style_class_name('dragging');
+    this._stageEventId = global.stage.connect('captured-event', (actor, event) => {
+      if (event.type() !== Clutter.EventType.BUTTON_RELEASE ||
+          event.get_button() !== 1)
+        return Clutter.EVENT_PROPAGATE;
+
+      this._finishSeeking();
+      return Clutter.EVENT_PROPAGATE;
+    });
+  }
+
+  _finishSeeking() {
+    this._seeking = false;
+    this._bar.remove_style_class_name('dragging');
+    if (this._stageEventId) {
+      global.stage.disconnect(this._stageEventId);
+      this._stageEventId = 0;
+    }
   }
 
   setPosition(position, duration) {
