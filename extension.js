@@ -547,6 +547,9 @@ export default class SpotifyLyricsExtension extends Extension {
     this._updateSleep();
     this._checkSleep();
 
+    if (!this._playing && !this._sleepUntil)
+      return;
+
     const track = this._track;
     if (!track)
       return;

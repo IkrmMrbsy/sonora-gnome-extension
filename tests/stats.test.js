@@ -34,6 +34,12 @@ check(currentStreak({'2026-10-28': 10, '2026-10-27': 5, '2026-10-25': 5},
   new Date(2026, 9, 28)) === 2, 'streak accepts legacy numbers');
 check(currentStreak({'2026-10-28': {seconds: 10}, '2026-10-27': {seconds: 5}},
   new Date(2026, 9, 28)) === 2, 'streak with day objects');
+check(currentStreak({'2026-10-27': 10, '2026-10-26': 5},
+  new Date(2026, 9, 28)) === 2, 'streak retains yesterday when today is unplayed');
+check(currentStreak({'2026-10-26': 10},
+  new Date(2026, 9, 28)) === 0, 'streak breaks when yesterday had no listening');
+check(currentStreak({'2026-10-28': 15, '2026-10-27': 10, '2026-10-26': 5},
+  new Date(2026, 9, 28)) === 3, 'streak increments when today has activity');
 check(currentStreak({}, new Date(2026, 9, 28)) === 0, 'empty streak');
 
 check(dayKey(new Date(2026, 0, 5)) === '2026-01-05', 'day key padding');

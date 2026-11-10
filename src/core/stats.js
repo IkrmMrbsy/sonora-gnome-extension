@@ -136,6 +136,15 @@ export function currentStreak(days, now = new Date()) {
   const date = new Date(now.getTime());
   let streak = 0;
 
+  if (daySeconds(days, dayKey(date)) > 0) {
+    while (daySeconds(days, dayKey(date)) > 0) {
+      streak++;
+      date.setDate(date.getDate() - 1);
+    }
+    return streak;
+  }
+
+  date.setDate(date.getDate() - 1);
   while (daySeconds(days, dayKey(date)) > 0) {
     streak++;
     date.setDate(date.getDate() - 1);
