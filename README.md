@@ -75,8 +75,8 @@ Latar pill diberi tint warna album art: pekat di tepi kiri (di belakang cover), 
 
 Slot di kanan pill bukan chip statistik. Isinya kontekstual, satu informasi per waktu:
 
-1. **Hitung mundur sisa lagu** (default) — misalnya `-3:10`, tipografinya sama dengan judul (11px, 600).
-2. **Sleep timer** — ikon bulan + sisa waktu, muncul hanya saat timer aktif. Klik untuk membatalkan.
+1. **Hitung mundur sisa lagu** (default) — misalnya `-3:10`, tipografinya sama dengan judul (11px, 700).
+2. **Sleep timer**: ikon bulan + sisa waktu, muncul hanya saat timer aktif. Timer dihentikan dari preferensi dengan memilih `Nonaktif`.
 3. **Duck mikrofon** — ikon mikrofon + `Duck`, muncul hanya saat musik sedang dikecilkan.
 
 Perpindahan antar isi memakai cross-fade 120ms, dan hanya terjadi saat *makna* slot berubah — bukan setiap detik. Saat lagu dijeda, slot, judul, dan cover meredup.
@@ -92,7 +92,7 @@ Isi kartu:
 - **Album art 64px** dengan sudut membulat. Klik dua kali untuk membuka Spotify.
 - **Judul + artis · album**, dipotong dengan elipsis bila panjang.
 - **Kontrol** previous / play-pause / next / repeat. Repeat bersiklus mati → semua lagu → satu lagu, dan ditulis ke pemutar lewat `LoopStatus` sehingga tetap tersimpan di Spotify.
-- **Baris waktu** `1:23 ──────── 3:20`. Garisnya bisa diklik atau di-drag untuk lompat; tombol ← → bekerja saat garis difokuskan.
+- **Baris waktu** `1:23 ──────── 3:20`. Garisnya bisa diklik atau di-drag untuk lompat.
 - **Footer** satu baris: `This week 3h 12m · top Nama Artis`, lalu di kanan `🔥 5d` (streak berjalan) dan `best 12d` (streak terpanjang).
 
 ### Dua laci yang bisa dibuka
@@ -102,7 +102,7 @@ Kartu punya dua sisi yang bisa dibuka tanpa menggeser isi utamanya:
 | Laci | Arah | Isi |
 |---|---|---|
 | **Lirik** | melebar ke kanan | 5 baris lirik di sekitar baris aktif |
-| **Statistik** | melebar ke bawah | total minggu ini, 7 batang hari, top 5 artis (menit), top 5 lagu (jumlah putar), hari aktif |
+| **Statistik** | melebar ke bawah | total minggu ini, 7 batang hari, top 5 artis (waktu), top 5 lagu (jumlah putar), hari aktif |
 
 Keduanya berperilaku sama: **klik untuk membuka**, klik lagi atau `Esc` untuk menutup. Tidak ada pratinjau saat kursor lewat — laci hanya terbuka kalau memang diminta, jadi tidak ada panel yang tiba-tiba melebar saat kursor melintas.
 
@@ -134,7 +134,7 @@ Durasi dipilih dari preferensi (nonaktif / 15 / 30 / 45 / 60 menit). Saat waktun
 2. Pemutaran dijeda.
 3. Volume dikembalikan ke nilai semula.
 
-Sisa waktu tampil sebagai hitung mundur di slot pill dan bisa dibatalkan dengan klik. Nilai timer tersimpan sebagai setting, jadi ikut ter-reset ke nol setelah timer selesai.
+Sisa waktu tampil sebagai hitung mundur di slot pill. Timer dihentikan dari preferensi dengan memilih `Nonaktif`. Nilai timer tersimpan sebagai setting, jadi ikut ter-reset ke nol setelah timer selesai.
 
 ---
 
@@ -196,6 +196,17 @@ Setting disimpan lewat GSettings (skema `org.gnome.shell.extensions.spotify-ext`
 
 ```
 sonora/
+├── .github/
+│   └── workflows/
+│       └── security.yml       # secret scan + SAST
+├── .editorconfig
+├── .gitignore
+├── .gitleaks.toml             # aturan Gitleaks
+├── .semgrepignore
+├── DESIGN.md                  # panduan desain
+├── LICENSE                    # GPL-3.0
+├── Makefile
+├── README.md
 ├── metadata.json              # wajib di root (dibaca Shell saat startup)
 ├── extension.js               # wajib di root, entry point
 ├── prefs.js                   # wajib di root, halaman preferensi
@@ -231,12 +242,13 @@ sonora/
 │   └── util/
 │       ├── art.js             # pixbuf → RGBA, pemasangan album art
 │       ├── color.js           # warna aksen dari album art
+│       ├── palette.js         # preset warna kartu dan pill
 │       └── path.js            # resolusi folder ekstensi
 │
 ├── tests/                     # tes unit, satu runner
 ├── dev/                       # pemutar MPRIS palsu + skrip headless shell
 ├── icons/                     # ikon tambahan (api, bulan)
-└── docs/                      # IDEAS.md, ROADMAP.md, STRUCTURE.md, mockup/
+└── docs/                      # AUDIT.md, IDEAS.md, ROADMAP.md, STRUCTURE.md, mockup/
 ```
 
 Alasan pemecahan ini, termasuk batasan yang tidak bisa dilanggar GNOME Shell, ada di [`docs/STRUCTURE.md`](docs/STRUCTURE.md).
@@ -255,12 +267,15 @@ Semua perintah pengembangan lewat `Makefile`:
 | `make schemas` | Kompilasi `schemas/gschemas.compiled` (wajib sebelum jalan pertama kali) |
 | `make lint` | Periksa sintaks semua berkas JavaScript |
 | `make test` | Jalankan semua tes di `tests/` |
+| `make security` | Secret scan dengan Gitleaks dan SAST dengan Semgrep |
 | `make install` | Symlink ke folder ekstensi + kompilasi skema |
 | `make uninstall` | Hapus symlink |
 | `make pack` | Buat `dist/sonora.zip` untuk rilis |
 | `make headless` | Jalankan shell headless dengan pemutar palsu |
 | `make clean` | Hapus artefak build |
 | `make help` | Daftar perintah |
+
+`make security` membutuhkan `gitleaks` dan `semgrep` di `PATH`. CI menjalankan pemeriksaan yang sama dengan versi yang dipin.
 
 **Tes** dijalankan lewat satu pintu:
 ```
@@ -293,3 +308,25 @@ journalctl --user -f | grep -i sonora
 - **Hanya Spotify.** Bus MPRIS ditulis tetap ke `org.mpris.MediaPlayer2.spotify`; pemutar lain tidak terdeteksi.
 - **Klik pill membuka kartu**, bukan play/pause. Kontrol pemutaran ada di dalam kartu.
 - Pada Wayland, perubahan kode butuh logout/login bila ekstensi gagal dimuat ulang dengan bersih.
+
+---
+
+## Kontribusi
+
+Issue dan pull request diterima. Sebelum mengirim PR, jalankan `make lint`, `make test`, dan `make security`.
+
+## Keamanan
+
+Jangan membuka issue publik untuk kerentanan. Gunakan pelaporan kerentanan privat di GitHub. `make security` menjalankan Gitleaks dan Semgrep; CI juga memindai setiap push dan pull request.
+
+## Privasi dan afiliasi
+
+- Tidak ada akun, telemetri, atau pengiriman data ke pembuat ekstensi.
+- Statistik disimpan lokal di `~/.local/share/spotify-ext/stats.json`.
+- Untuk lirik, judul, artis, album, dan durasi lagu dikirim ke `lrclib.net`.
+- Album art diambil dari URL `mpris:artUrl` yang disediakan Spotify.
+- Sonora tidak berafiliasi dengan Spotify. Spotify adalah merek dagang Spotify AB.
+
+## Lisensi
+
+Sonora didistribusikan di bawah GNU General Public License v3.0. Lihat [LICENSE](LICENSE).

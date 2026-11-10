@@ -554,107 +554,114 @@
 
   /* ---------- B v7: card that widens to reveal lyrics ---------- */
   .v7-pop{
+    --accent-ink:color-mix(in srgb,var(--accent) 82%, #fff);
     position:absolute;top:38px;right:12px;width:360px;
-    padding:0;border-radius:18px;overflow:visible;isolation:isolate;
-    border:1px solid color-mix(in srgb,var(--accent) 40%, rgba(255,255,255,.12));
-    background:rgba(13,13,18,.88);
-    box-shadow:0 6px 16px rgba(0,0,0,.40);
-    backdrop-filter:blur(20px);z-index:3;
-    opacity:0;transform:translateY(-6px) scale(.985);transform-origin:top right;
+    padding:0;border-radius:12px;overflow:visible;isolation:isolate;
+    border:1px solid rgba(255,255,255,.14);
+    background:#1b1b1f;
+    box-shadow:0 14px 34px rgba(0,0,0,.46),0 1px 3px rgba(0,0,0,.55);
+    z-index:3;
+    opacity:0;transform:translateY(-4px);transform-origin:top right;
     pointer-events:none;
-    transition:opacity .18s ease,transform .18s cubic-bezier(.2,.7,.3,1),
-               width .32s cubic-bezier(.2,.7,.3,1),border-color .2s ease;
+    transition:opacity .16s ease,transform .16s cubic-bezier(.2,.7,.3,1),
+               width .28s cubic-bezier(.2,.7,.3,1),border-color .2s ease;
   }
   .v7-pop.open{opacity:1;transform:none;pointer-events:auto}
+  .v7-pop.accent-dark{--accent-ink:#c9c6bf}
   /* the popover itself grows; the left column keeps its 360px, so it never reflows */
   .v7-pop.peek{width:416px}
   .v7-pop.lyrics-open{width:660px}
 
-  .v7-pop::after{
-    content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;
-    background:radial-gradient(90% 90% at 11% 17%,
-      color-mix(in srgb,var(--accent) 50%, transparent) 0%,
-      color-mix(in srgb,var(--accent) 16%, transparent) 45%,
-      transparent 100%);
-    clip-path:inset(0 round 18px);
-    pointer-events:none;
-  }
   .v7-pop::before{
-    content:"";position:absolute;top:-6px;left:var(--arrow-x,22px);width:10px;height:10px;
-    background:rgba(13,13,18,.88);
-    border-left:1px solid color-mix(in srgb,var(--accent) 40%, rgba(255,255,255,.12));
-    border-top:1px solid color-mix(in srgb,var(--accent) 40%, rgba(255,255,255,.12));
+    content:"";position:absolute;top:-6px;right:var(--arrow-r,150px);left:auto;width:10px;height:10px;
+    background:#1b1b1f;
+    border-left:1px solid rgba(255,255,255,.14);
+    border-top:1px solid rgba(255,255,255,.14);
     transform:rotate(45deg);border-radius:2px 0 0 0;
   }
 
   /* two columns: left card content (fixed) + lyrics (revealed) */
   .v7-cols{display:flex;align-items:stretch;border-radius:inherit;overflow:hidden}
 
-  .v7-left{flex:0 0 360px;width:360px;padding:16px;box-sizing:border-box}
+  .v7-left{flex:0 0 360px;width:360px;padding:14px;box-sizing:border-box;
+    display:flex;flex-direction:column}
 
   .v7-lyrics{
     flex:0 0 0;width:0;overflow:hidden;position:relative;
     border-left:1px solid rgba(255,255,255,0);
-    transition:width .32s cubic-bezier(.2,.7,.3,1),opacity .18s ease,border-color .2s ease;
+    transition:width .28s cubic-bezier(.2,.7,.3,1),opacity .16s ease,border-color .2s ease;
     opacity:0;
+    background:rgba(255,255,255,.02);
   }
   .v7-pop.peek .v7-lyrics{
     flex-basis:56px;width:56px;opacity:.35;
-    border-left-color:rgba(255,255,255,.06);
+    border-left-color:rgba(255,255,255,.08);
   }
   .v7-pop.lyrics-open .v7-lyrics{
     flex-basis:300px;width:300px;opacity:1;
-    border-left-color:rgba(255,255,255,.08);
+    border-left-color:rgba(255,255,255,.10);
   }
+  .v7-pop.lyrics-open .v7-cols{min-height:224px}
 
   .v7-lyrics-inner{
-    width:300px;height:100%;padding:14px 16px;box-sizing:border-box;
+    position:absolute;top:0;left:0;width:300px;height:100%;
+    padding:16px 18px;box-sizing:border-box;
     display:flex;flex-direction:column;justify-content:center;gap:2px;
     -webkit-mask-image:linear-gradient(180deg,transparent 0%,#000 14%,#000 86%,transparent 100%);
     mask-image:linear-gradient(180deg,transparent 0%,#000 14%,#000 86%,transparent 100%);
   }
 
   .v7-line{
-    padding:5px 0;font-size:12px;line-height:1.35;color:rgba(255,255,255,.30);
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+    width:100%;padding:6px 8px;border:0;background:transparent;
+    font:inherit;font-size:13px;line-height:1.45;color:#9a978f;text-align:left;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;flex:0 0 auto;
     cursor:pointer;border-radius:6px;
-    transition:color .18s ease,font-size .18s ease,opacity .18s ease;
+    transition:color .16s ease,background .16s ease,font-size .16s ease;
   }
-  .v7-line:hover{color:rgba(255,255,255,.62)}
-  .v7-line.near{color:rgba(255,255,255,.46)}
+  .v7-line:hover{color:#d6d3cc;background:rgba(255,255,255,.05)}
+  .v7-line.near{color:#b3b0a9}
   .v7-line.active{
-    font-size:15px;font-weight:700;color:#f4f2ef;
+    font-size:15px;font-weight:700;color:#f2f0ec;
+    background:rgba(255,255,255,.06);
+    box-shadow:inset 2px 0 0 var(--accent-ink);
   }
-  .v7-line.past{color:rgba(255,255,255,.22)}
+  .v7-line.past{color:#8e8b85}
+  .v7-line:focus{outline:2px solid #78aeff;outline-offset:-2px}
 
   .v7-empty{
-    font-size:11.5px;color:rgba(255,255,255,.32);text-align:center;padding:0 8px;
+    font-size:12px;line-height:1.5;color:#a8a59f;text-align:center;padding:0 12px;
   }
+  .v7-empty-retry{
+    display:inline;margin-left:4px;padding:0;border:0;background:none;
+    color:#f2f0ec;font:inherit;font-weight:700;text-decoration:underline;
+    text-underline-offset:2px;cursor:pointer;
+  }
+  .v7-empty-retry:focus-visible{outline:2px solid #78aeff;outline-offset:2px}
 
   /* edge tab: half outside the card, follows the right edge while widening */
   .v7-tab{
     position:absolute;top:50%;right:0;transform:translate(50%,-50%);
-    width:18px;height:56px;padding:0;border:1px solid rgba(255,255,255,.12);
-    border-radius:9px;background:rgba(20,20,26,.94);
-    color:rgba(244,242,239,.66);display:grid;place-items:center;cursor:pointer;
-    transition:background .16s ease,color .16s ease,border-color .16s ease,width .2s ease;
+    width:20px;height:64px;padding:0;border:1px solid rgba(255,255,255,.16);
+    border-radius:6px;background:#26262b;
+    color:#c9c6bf;display:grid;place-items:center;cursor:pointer;
+    transition:background .16s ease,color .16s ease,border-color .16s ease;
     z-index:4;
   }
   .v7-tab:hover{
-    background:color-mix(in srgb,var(--accent) 26%, rgba(20,20,26,.94));
-    color:#fff;border-color:color-mix(in srgb,var(--accent) 55%, transparent);
+    background:#303036;color:#f2f0ec;border-color:rgba(255,255,255,.30);
   }
   .v7-tab:focus-visible{
-    outline:2px solid color-mix(in srgb,var(--accent) 70%, #fff);outline-offset:2px;
+    outline:2px solid #78aeff;outline-offset:2px;
   }
-  .v7-tab svg{width:12px;height:12px;fill:currentColor;transition:transform .28s cubic-bezier(.2,.7,.3,1)}
+  .v7-tab svg{width:13px;height:13px;fill:currentColor;transition:transform .24s cubic-bezier(.2,.7,.3,1)}
   .v7-pop.lyrics-open .v7-tab svg{transform:rotate(180deg)}
   .v7-pop.lyrics-open .v7-tab{
-    background:color-mix(in srgb,var(--accent) 22%, rgba(20,20,26,.94));
-    border-color:color-mix(in srgb,var(--accent) 45%, transparent);
+    background:#303036;
+    border-color:rgba(255,255,255,.30);
   }
   /* the tab would be clipped by the popover's own stacking on the arrow side */
-  .v7-pop .v7-tab{border-left-color:rgba(255,255,255,.12)}
+  .v7-pop .v7-tab{border-left-color:rgba(255,255,255,.16)}
 
   /* ===== variant: grip (thin seam at the edge, no icon) ===== */
   .v7-grip,.v7-rail,.v7-rowtoggle{display:none}
@@ -664,144 +671,170 @@
 
   .v7-grip{
     position:absolute;top:50%;right:-4px;transform:translateY(-50%);
-    width:12px;height:104px;padding:0;border:0;background:transparent;
+    width:14px;height:112px;padding:0;border:0;background:transparent;
     cursor:pointer;place-items:center;z-index:4;border-radius:6px;
   }
   .v7-grip::before{
-    content:"";width:2px;height:42px;border-radius:2px;
-    background:rgba(255,255,255,.16);
-    transition:height .2s ease,background .2s ease,box-shadow .2s ease;
+    content:"";width:2px;height:40px;border-radius:2px;
+    background:rgba(255,255,255,.28);
+    transition:height .18s ease,background .18s ease;
   }
-  .v7-grip:hover::before,.v7-grip:focus-visible::before{
-    height:76px;background:color-mix(in srgb,var(--accent) 72%, #fff);
-    box-shadow:0 0 8px color-mix(in srgb,var(--accent) 60%, transparent);
-  }
-  .v7-grip:focus-visible{outline:none}
+  .v7-grip:hover::before{height:64px;background:#f2f0ec}
+  .v7-grip:focus-visible{outline:2px solid #78aeff;outline-offset:2px}
   .v7-pop.lyrics-open.variant-grip .v7-grip::before{
-    background:color-mix(in srgb,var(--accent) 60%, #fff);
+    background:rgba(255,255,255,.62);
   }
 
-  /* ===== variant: rail (always-visible vertical label, costs 26px) ===== */
+  /* ===== variant: rail (always-visible vertical label, costs 28px) ===== */
   .v7-pop.variant-rail .v7-tab{display:none}
   .v7-pop.variant-rail .v7-rail{display:flex}
-  .v7-pop.variant-rail{width:386px}
-  .v7-pop.variant-rail.lyrics-open{width:686px}
-  .v7-pop.variant-rail.peek{width:386px}
+  .v7-pop.variant-rail{width:388px}
+  .v7-pop.variant-rail.lyrics-open{width:688px}
+  .v7-pop.variant-rail.peek{width:388px}
 
   .v7-rail{
-    flex:0 0 26px;width:26px;align-items:center;justify-content:center;
-    padding:0;border:0;border-left:1px solid rgba(255,255,255,.08);
-    background:rgba(255,255,255,.03);color:rgba(244,242,239,.42);
+    flex:0 0 28px;width:28px;align-items:center;justify-content:center;
+    padding:0;border:0;border-left:1px solid rgba(255,255,255,.10);
+    background:rgba(255,255,255,.04);color:#a8a59f;
     cursor:pointer;order:1;
-    transition:background .18s ease,color .18s ease,border-color .18s ease;
+    transition:background .16s ease,color .16s ease,border-color .16s ease;
   }
   .v7-rail span{
     writing-mode:vertical-rl;transform:rotate(180deg);
-    font-size:9.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+    font-size:11px;font-weight:600;letter-spacing:.04em;
   }
   .v7-rail:hover{
-    background:color-mix(in srgb,var(--accent) 16%, rgba(255,255,255,.03));
-    color:#f4f2ef;border-left-color:color-mix(in srgb,var(--accent) 40%, transparent);
+    background:rgba(255,255,255,.09);
+    color:#f2f0ec;border-left-color:rgba(255,255,255,.18);
   }
+  .v7-rail:focus-visible{outline:2px solid #78aeff;outline-offset:-2px}
   .v7-pop.variant-rail .v7-lyrics{order:2}
 
   /* ===== stats drawer: expands downward, lyrics column unaffected ===== */
   .v7-statswrap{
     height:0;overflow:hidden;
-    transition:height .3s cubic-bezier(.2,.7,.3,1);
+    transition:height .26s cubic-bezier(.2,.7,.3,1);
   }
   /* hover peek: reveal just the header + week total, then close again */
-  .v7-pop.stats-peek .v7-statswrap{height:68px}
-  .v7-pop.stats-open .v7-statswrap{height:268px}
+  .v7-pop.stats-peek .v7-statswrap{height:76px}
+  .v7-pop.stats-open .v7-statswrap{height:322px}
+  .v7-pop.stats-open.data-alt .v7-statswrap{height:128px}
 
   .v7-stats{
-    width:100%;box-sizing:border-box;padding:0 16px 14px;
-    display:flex;flex-direction:column;gap:9px;
+    width:100%;box-sizing:border-box;padding:0 16px 16px;
+    display:flex;flex-direction:column;gap:10px;
   }
+  .v7-stats[hidden]{display:none}
 
   .v7-stats-head{
-    display:flex;align-items:baseline;gap:8px;padding-top:10px;
-    border-top:1px solid rgba(255,255,255,.08);
+    display:flex;align-items:baseline;gap:8px;padding-top:12px;
+    border-top:1px solid rgba(255,255,255,.10);
   }
   .v7-stats-head b{
-    font-size:9.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
-    color:rgba(244,242,239,.66);
+    font-size:12px;font-weight:700;letter-spacing:0;
+    color:#f2f0ec;
   }
-  .v7-stats-head span{margin-left:auto;font-size:9.5px;color:var(--faint)}
+  .v7-stats-head span{margin-left:auto;font-size:10.5px;color:#8e8b85}
 
   .v7-weektotal{
-    font-size:20px;font-weight:700;line-height:1.1;letter-spacing:-.01em;
-    color:#f4f2ef;font-variant-numeric:tabular-nums;
+    font-size:22px;font-weight:700;line-height:1.1;letter-spacing:-.01em;
+    color:#f2f0ec;font-variant-numeric:tabular-nums;
   }
 
   /* 7 fixed weekday bars: Sen..Min, today highlighted */
-  .v7-sparkwrap{display:flex;flex-direction:column;gap:3px}
-  .v7-spark{display:flex;align-items:flex-end;gap:6px;height:34px}
+  .v7-sparkwrap{display:flex;flex-direction:column;gap:4px}
+  .v7-spark{display:flex;align-items:flex-end;gap:6px;height:40px}
   .v7-spark i{
-    flex:1;border-radius:2px;background:rgba(255,255,255,.13);min-height:2px;
+    flex:1;border-radius:2px;background:rgba(255,255,255,.15);min-height:2px;
   }
-  .v7-spark i.today{background:color-mix(in srgb,var(--accent) 82%, #fff)}
-  .v7-spark i.empty{background:rgba(255,255,255,.05)}
+  .v7-spark i.today{background:var(--accent-ink)}
+  .v7-spark i.empty{background:rgba(255,255,255,.06)}
   .v7-spark-days{display:flex;gap:6px}
   .v7-spark-days span{
-    flex:1;text-align:center;font-size:8.5px;color:rgba(255,255,255,.26);
+    flex:1;text-align:center;font-size:10px;color:#8e8b85;
   }
-  .v7-spark-days span.today{color:rgba(244,242,239,.80);font-weight:700}
+  .v7-spark-days span.today{color:#f2f0ec;font-weight:700}
 
   /* two columns: artists | tracks, no bars */
-  .v7-grid{display:flex;gap:14px;align-items:flex-start}
+  .v7-grid{display:flex;gap:16px;align-items:flex-start}
   .v7-col{flex:1;min-width:0}
   .v7-col > em{
-    display:block;font-style:normal;font-size:8.5px;font-weight:700;
-    letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.34);
-    margin-bottom:5px;
+    display:block;font-style:normal;font-size:10.5px;font-weight:700;
+    letter-spacing:0;color:#8e8b85;
+    margin-bottom:6px;
   }
 
   .v7-item{
-    display:flex;align-items:baseline;gap:5px;
-    font-size:10px;line-height:16px;
+    display:flex;align-items:baseline;gap:6px;
+    font-size:11px;line-height:18px;
   }
   .v7-item .v7-rank{
-    flex:0 0 9px;font-size:8.5px;color:rgba(255,255,255,.26);
+    flex:0 0 11px;font-size:10px;color:#8e8b85;
     font-variant-numeric:tabular-nums;
   }
-  .v7-item:first-child .v7-rank{color:color-mix(in srgb,var(--accent) 72%, #fff)}
   .v7-item .v7-name{
-    flex:1;min-width:0;color:rgba(244,242,239,.82);
+    flex:1;min-width:0;color:#d6d3cc;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
   .v7-item .v7-val{
-    flex:0 0 auto;font-size:9px;color:rgba(255,255,255,.34);
+    flex:0 0 auto;font-size:10px;color:#9a978f;
     font-variant-numeric:tabular-nums;
   }
 
   .v7-active{
-    font-size:9.5px;color:rgba(255,255,255,.34);
-    padding-top:8px;border-top:1px solid rgba(255,255,255,.06);
+    font-size:10.5px;color:#8e8b85;
+    padding-top:9px;border-top:1px solid rgba(255,255,255,.08);
   }
-  .v7-active b{color:rgba(244,242,239,.72);font-weight:700}
+  .v7-active b{color:#d6d3cc;font-weight:700}
+
+  /* data states: empty, loading, error */
+  .v7-statstate{
+    display:flex;flex-direction:column;gap:5px;
+    padding:12px 16px 16px;
+    border-top:1px solid rgba(255,255,255,.10);
+  }
+  .v7-statstate[hidden]{display:none}
+  .v7-statstate-title{margin:0;font-size:12.5px;font-weight:700;color:#f2f0ec}
+  .v7-statstate-body{margin:0;font-size:11.5px;line-height:1.5;color:#a8a59f}
+  .v7-statstate-retry{
+    align-self:flex-start;margin-top:6px;padding:6px 12px;
+    border:1px solid rgba(255,255,255,.16);border-radius:6px;
+    background:rgba(255,255,255,.06);color:#f2f0ec;
+    font:inherit;font-size:11.5px;font-weight:600;cursor:pointer;
+  }
+  .v7-statstate-retry:hover{background:rgba(255,255,255,.11)}
+  .v7-statstate-retry:focus-visible{outline:2px solid #78aeff;outline-offset:2px}
+  .v7-statstate.loading::after{
+    content:"";height:2px;margin-top:8px;border-radius:2px;
+    background:linear-gradient(90deg,transparent,rgba(255,255,255,.55),transparent);
+    background-size:40% 100%;background-repeat:no-repeat;
+    animation:v7load 1.2s linear infinite;
+  }
+  @keyframes v7load{
+    from{background-position:-40% 0}
+    to{background-position:140% 0}
+  }
 
   /* bottom affordance: horizontal grip, half protruding */
   .v7-stab{
     position:absolute;left:50%;bottom:0;transform:translate(-50%,50%);
-    width:56px;height:18px;padding:0;display:grid;place-items:center;
-    border:1px solid rgba(255,255,255,.12);border-radius:9px;
-    background:rgba(20,20,26,.94);color:rgba(244,242,239,.62);
+    width:64px;height:24px;padding:0;display:grid;place-items:center;
+    border:1px solid rgba(255,255,255,.16);border-radius:6px;
+    background:#26262b;color:#c9c6bf;
     cursor:pointer;z-index:4;
     transition:background .16s ease,color .16s ease,border-color .16s ease;
   }
   .v7-stab:hover{
-    background:color-mix(in srgb,var(--accent) 26%, rgba(20,20,26,.94));
-    color:#fff;border-color:color-mix(in srgb,var(--accent) 55%, transparent);
+    background:#303036;color:#f2f0ec;border-color:rgba(255,255,255,.30);
   }
   .v7-stab:focus-visible{
-    outline:2px solid color-mix(in srgb,var(--accent) 70%, #fff);outline-offset:2px;
+    outline:2px solid #78aeff;outline-offset:2px;
   }
-  .v7-stab svg{width:12px;height:12px;fill:currentColor;transition:transform .28s cubic-bezier(.2,.7,.3,1)}
+  .v7-stab svg{width:13px;height:13px;fill:currentColor;transition:transform .24s cubic-bezier(.2,.7,.3,1)}
   .v7-pop.stats-open .v7-stab svg{transform:rotate(180deg)}
   .v7-pop.stats-open .v7-stab{
-    background:color-mix(in srgb,var(--accent) 22%, rgba(20,20,26,.94));
-    border-color:color-mix(in srgb,var(--accent) 45%, transparent);
+    background:#303036;
+    border-color:rgba(255,255,255,.30);
   }
 
   /* ===== variant: row (conventional toggle inside the card) ===== */
@@ -809,19 +842,19 @@
   .v7-pop.variant-row .v7-rowtoggle{display:flex}
 
   .v7-rowtoggle{
-    align-items:center;gap:7px;width:100%;margin-top:8px;padding:6px 8px;
-    border:1px solid rgba(255,255,255,.10);border-radius:9px;
-    background:rgba(255,255,255,.04);color:rgba(244,242,239,.62);
-    font:inherit;font-size:11px;font-weight:600;cursor:pointer;
+    align-items:center;gap:8px;width:100%;min-height:34px;margin-top:10px;padding:0 10px;
+    border:1px solid rgba(255,255,255,.13);border-radius:6px;
+    background:rgba(255,255,255,.05);color:#c9c6bf;
+    font:inherit;font-size:12px;font-weight:600;cursor:pointer;
     transition:background .16s ease,color .16s ease,border-color .16s ease;
   }
-  .v7-rowtoggle svg{width:12px;height:12px;fill:currentColor;flex:0 0 auto}
-  .v7-rowtoggle .v7-rowtoggle-chev{margin-left:auto;transition:transform .26s cubic-bezier(.2,.7,.3,1)}
+  .v7-rowtoggle svg{width:13px;height:13px;fill:currentColor;flex:0 0 auto}
+  .v7-rowtoggle .v7-rowtoggle-chev{margin-left:auto;transition:transform .24s cubic-bezier(.2,.7,.3,1)}
   .v7-rowtoggle:hover{
-    background:color-mix(in srgb,var(--accent) 16%, rgba(255,255,255,.04));
-    color:#f4f2ef;border-color:color-mix(in srgb,var(--accent) 40%, transparent);
+    background:rgba(255,255,255,.10);
+    color:#f2f0ec;border-color:rgba(255,255,255,.24);
   }
-  .v7-rowtoggle:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 70%, #fff);outline-offset:2px}
+  .v7-rowtoggle:focus-visible{outline:2px solid #78aeff;outline-offset:2px}
   .v7-pop.lyrics-open.variant-row .v7-rowtoggle .v7-rowtoggle-chev{transform:rotate(180deg)}
 
   .v7-compare{
@@ -829,129 +862,166 @@
     gap:12px;margin:0 0 16px;
   }
   .v7-card-opt{
-    border:1px solid var(--line);border-radius:12px;padding:12px 14px;
+    border:1px solid var(--line);border-radius:8px;padding:12px 14px;
     background:rgba(255,255,255,.03);
   }
   .v7-card-opt p{margin:6px 0 0;font-size:11.5px;line-height:1.55;color:var(--dim)}
   .v7-opt-head{display:flex;align-items:baseline;gap:8px;justify-content:space-between}
-  .v7-opt-head b{font-size:12px;color:var(--text)}
-  .v7-opt-head span{font-size:10px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap}
-  .v7-opt-meta{color:var(--faint) !important;font-size:11px !important}
+  .v7-opt-head b{font-size:12.5px;color:var(--text)}
+  .v7-opt-head span{font-size:10.5px;color:#9a978f;font-variant-numeric:tabular-nums;white-space:nowrap}
+  .v7-opt-meta{color:#9a978f !important;font-size:11px !important}
 
   .v7-accent-note{
     align-self:center;font-size:11px;font-variant-numeric:tabular-nums;
-    color:var(--dim);padding:5px 10px;border-radius:999px;
+    color:var(--dim);padding:5px 9px;border-radius:6px;
     border:1px solid var(--line);background:rgba(255,255,255,.04);
   }
 
   .v7-variant-note{
     align-self:center;font-size:11px;color:var(--dim);
-    padding:5px 10px;border-radius:999px;
+    padding:5px 9px;border-radius:6px;
     border:1px solid var(--line);background:rgba(255,255,255,.04);
   }
 
+  .v7-demo h2{
+    font-size:15px;text-transform:none;letter-spacing:0;color:var(--text);
+    margin:0 0 4px;
+  }
+  .v7-demo .hint{color:var(--dim)}
+  .v7-why-btn{
+    all:unset;display:inline;cursor:pointer;
+    border-bottom:1px dotted #8e8b85;color:inherit;
+  }
+  .v7-why-btn:focus-visible{outline:2px solid #78aeff;outline-offset:2px;border-radius:2px}
+
+  /* the panel indicator shares the same matte surface as the card */
+  .v7-stage .v6-ind{
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:8px;background:#1b1b1f;
+    box-shadow:none;
+  }
+  .v7-stage .v6-ind::after{display:none}
+  .v7-stage .v6-ind:hover{border-color:rgba(255,255,255,.28)}
+  .v7-stage .v6-ind[aria-expanded="true"]{
+    border-color:rgba(255,255,255,.30);box-shadow:none;
+  }
+  .v7-stage .v6-ind:focus-visible{outline:2px solid #78aeff;outline-offset:2px}
+  .v7-stage .v6-ind.is-paused{border-color:rgba(255,255,255,.14)}
+
   /* card controls: prev / play / next / repeat + seeking bar */
-  .v7-ctl{gap:8px}
-  .v7-left .ctl.v7-ctl{gap:6px}
+  .v7-ctl{gap:6px}
+  .v7-left .ctl.v7-ctl{gap:2px}
   .v7-ctlbtn{
-    width:24px;height:24px;padding:0;border:0;border-radius:8px;
-    background:transparent;color:rgba(255,255,255,.62);
+    width:30px;height:30px;padding:0;border:0;border-radius:6px;
+    background:transparent;color:#c9c6bf;
     display:grid;place-items:center;cursor:pointer;font:inherit;
     transition:background .15s ease,color .15s ease;
   }
-  .v7-ctlbtn:hover{background:rgba(255,255,255,.12);color:#fff}
-  .v7-ctlbtn:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 70%, #fff);outline-offset:2px}
-  .v7-ctlbtn svg{width:15px;height:15px;fill:currentColor}
+  .v7-ctlbtn:hover{background:rgba(255,255,255,.10);color:#f2f0ec}
+  .v7-ctlbtn:focus-visible{outline:2px solid #78aeff;outline-offset:2px}
+  .v7-ctlbtn svg{width:16px;height:16px;fill:currentColor}
+  .v7-ctlbtn:disabled{color:#6f6c67;cursor:not-allowed}
 
   .v7-repeat{
-    position:relative;width:24px;height:24px;padding:0;border:0;border-radius:8px;
-    background:transparent;color:rgba(255,255,255,.45);
+    position:relative;width:30px;height:30px;padding:0;border:0;border-radius:6px;
+    background:transparent;color:#a8a59f;
     display:grid;place-items:center;cursor:pointer;font:inherit;
     transition:background .15s ease,color .15s ease;
   }
-  .v7-repeat svg{width:15px;height:15px;fill:currentColor}
-  .v7-repeat:hover{background:rgba(255,255,255,.12);color:#fff}
-  .v7-repeat:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 70%, #fff);outline-offset:2px}
+  .v7-repeat svg{width:16px;height:16px;fill:currentColor}
+  .v7-repeat:hover{background:rgba(255,255,255,.10);color:#f2f0ec}
+  .v7-repeat:focus-visible{outline:2px solid #78aeff;outline-offset:2px}
   .v7-repeat .v7-repeat-one{
-    position:absolute;font-size:7px;font-weight:700;line-height:1;
+    position:absolute;font-size:8px;font-weight:700;line-height:1;
     color:currentColor;opacity:0;transition:opacity .15s ease;
   }
-  .v7-repeat.on{color:color-mix(in srgb,var(--accent) 80%, #fff)}
+  .v7-repeat.on{color:#f2f0ec;background:rgba(255,255,255,.08)}
   .v7-repeat.on.one .v7-repeat-one{opacity:1}
 
   /* current | bar | duration on one line: no extra vertical space, no gaps */
-  .v7-timerow{display:flex;align-items:center;gap:8px;margin-top:11px}
+  .v7-timerow{display:flex;align-items:center;gap:8px;margin-top:12px}
   .v7-tlabel{
-    flex:0 0 auto;min-width:28px;font-size:9.5px;
-    color:rgba(255,255,255,.40);font-variant-numeric:tabular-nums;
+    flex:0 0 auto;min-width:30px;font-size:10.5px;
+    color:#a8a59f;font-variant-numeric:tabular-nums;
   }
   .v7-tlabel-end{text-align:right}
 
   .v7-bar{
-    position:relative;flex:1;height:14px;display:flex;align-items:center;
+    position:relative;flex:1;height:18px;display:flex;align-items:center;
     cursor:pointer;touch-action:none;
   }
   .v7-bar::before{
     content:"";position:absolute;left:0;right:0;height:3px;border-radius:2px;
-    background:rgba(255,255,255,.14);
+    background:rgba(255,255,255,.16);
   }
   .v7-bar-fill{
     position:absolute;left:0;height:3px;width:0;border-radius:2px;
-    background:linear-gradient(90deg,#fff,rgba(255,255,255,.75));
+    background:var(--accent-ink);
     pointer-events:none;
   }
   .v7-bar-knob{
-    position:absolute;width:9px;height:9px;border-radius:50%;
-    background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.5);
+    position:absolute;width:10px;height:10px;border-radius:50%;
+    background:#f2f0ec;box-shadow:0 1px 3px rgba(0,0,0,.5);
     transform:translateX(-50%);left:0;opacity:0;
     transition:opacity .15s ease;pointer-events:none;
   }
   .v7-bar:hover .v7-bar-knob,.v7-bar.dragging .v7-bar-knob{opacity:1}
-  .v7-bar:focus-visible{outline:2px solid color-mix(in srgb,var(--accent) 70%, #fff);outline-offset:3px;border-radius:4px}
+  .v7-bar:focus-visible{outline:2px solid #78aeff;outline-offset:3px;border-radius:4px}
 
   .v7-row{display:flex;align-items:center;gap:10px}
-  .v7-row .art{width:64px;height:64px;border-radius:14px}
+  .v7-row .art{width:56px;height:56px;border-radius:8px}
   .v7-titles{flex:1;min-width:0}
   .v7-title{
-    font-size:14px;font-weight:700;
+    font-size:15px;font-weight:700;letter-spacing:-.01em;color:#f2f0ec;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   }
-  .v7-sub{font-size:11px;color:var(--dim);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .v7-left .ctl{gap:12px}
-  .v7-left .ctl svg{width:15px;height:15px}
+  .v7-sub{
+    font-size:11.5px;line-height:1.35;color:#b3b0a9;margin-top:2px;
+    display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;
+    overflow:hidden;
+  }
+  .v7-left .ctl{gap:10px}
+  .v7-left .ctl svg{width:16px;height:16px}
   .v7-left .ctl .play{
     border:0;padding:0;cursor:pointer;font:inherit;
-    width:28px;height:28px;
+    width:30px;height:30px;
   }
   .v7-left .progress{margin-top:12px}
   .v7-foot{
-    display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:9px;
+    display:flex;align-items:center;gap:6px;margin-top:auto;padding-top:10px;
     border-top:1px solid rgba(255,255,255,.10);
-    font-size:11px;line-height:14px;color:rgba(255,255,255,.48);
+    font-size:11px;line-height:15px;color:#a8a59f;
     font-variant-numeric:tabular-nums;
   }
   .v7-foot .v7-foot-ico{
     width:14px;height:14px;flex:0 0 auto;
-    fill:color-mix(in srgb,var(--accent) 90%, #fff);
-    filter:drop-shadow(0 0 2px color-mix(in srgb,var(--accent) 75%, transparent));
+    fill:#c9c6bf;
   }
   .v7-foot-text{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .v7-foot b{color:rgba(244,242,239,.88);font-weight:700}
+  .v7-foot b{color:#d6d3cc;font-weight:700}
   .v7-foot-stats{margin-left:auto;display:flex;align-items:center;gap:10px;flex:0 0 auto}
-  .v7-streak{display:flex;align-items:center;gap:4px;color:rgba(255,255,255,.62)}
+  .v7-streak{display:flex;align-items:center;gap:4px;color:#a8a59f}
   .v7-streak svg{
-    width:14px;height:14px;flex:0 0 auto;fill:#ffb066;
-    filter:drop-shadow(0 0 2px rgba(255,120,20,.95)) drop-shadow(0 0 6px rgba(255,80,0,.55));
+    width:14px;height:14px;flex:0 0 auto;fill:#c9c6bf;
   }
-  .v7-streak b{color:#f4f2ef;font-weight:700}
+  .v7-streak b{color:#f2f0ec;font-weight:700}
   .v7-best{
     display:flex;align-items:center;gap:4px;padding-left:10px;
-    border-left:1px solid rgba(255,255,255,.10);color:rgba(255,255,255,.40);
+    border-left:1px solid rgba(255,255,255,.10);color:#8e8b85;
   }
-  .v7-best b{color:rgba(255,255,255,.62);font-weight:700}
+  .v7-best b{color:#b3b0a9;font-weight:700}
+
+  .v7-pop button:active{filter:brightness(.9)}
+
+  @media (pointer:coarse){
+    .v7-ctlbtn,.v7-repeat,.v7-left .ctl .play{width:44px;height:44px}
+    .v7-tab{width:28px;height:64px}
+    .v7-stab{width:72px;height:32px}
+  }
 
   @media (prefers-reduced-motion: reduce){
     .v7-pop,.v7-lyrics,.v7-tab,.v7-tab svg,.v7-grip::before,.v7-rail,.v7-rowtoggle,.v7-rowtoggle svg,.v7-statswrap,.v7-stab,.v7-stab svg{transition-duration:0s}
+    .v7-statstate.loading::after{animation:none;background:rgba(255,255,255,.25)}
   }
 
   /* ---------- B v8: full statistics page ---------- */
@@ -1629,61 +1699,62 @@
     </div>
   </section>
 
-  <section class="demo">
-    <h2>B v7 — Kartu melebar untuk lirik</h2>
+  <section class="demo v7-demo" id="v7">
+    <h2>B v7: Kartu melebar untuk lirik</h2>
     <p class="hint">
       Kartu terbuka <b>tanpa lirik dan tanpa statistik</b>; affordance kecil di tiap sisi membukanya.
-      <b>Lirik melebar ke kiri</b>, <b>statistik melebar ke bawah</b>. Keduanya independen — membuka
+      <b>Lirik melebar ke kiri</b>, <b>statistik melebar ke bawah</b>. Keduanya independen: membuka
       statistik tidak memanjangkan kolom lirik, dan sebaliknya. Sisi kiri tidak pernah bergeser.
       Klik baris lirik untuk seek; klik lagi atau <kbd>Esc</kbd> untuk menutup.
       Ganti <b>Affordance</b> di toolbar untuk membandingkan 4 gaya, dan ganti <b>Lagu</b> untuk melihat
-      bagaimana tint, border, dan ikon mengikuti warna album — termasuk cover hitam dan abu.
+      bagaimana aksen progress, garis lirik aktif, dan batang hari ini mengikuti warna album, termasuk
+      cover hitam dan abu. Saat aksen terlalu gelap, penanda memakai abu terang agar tetap terbaca.
       Di kartu: <b>repeat</b> (mati → semua → satu lagu), <b>durasi</b> di kiri &amp; kanan, dan <b>garis
       progress bisa digeser</b> untuk lompat; tombol ← → juga bekerja saat garis difokuskan.
       Kedua drawer punya perilaku sama: <b>hover = mengintip</b>, <b>klik = buka penuh</b>.
-      <button id="v7HoverNote" style="all:unset;cursor:help;border-bottom:1px dotted var(--faint)">Kenapa isinya begitu?</button>
+      <button id="v7HoverNote" class="v7-why-btn" type="button">Kenapa isinya begitu?</button>
     </p>
     <p class="hint" id="v7Why" hidden>
       <b>Satu cakupan, tanpa tab.</b> Statistik ini selalu <i>minggu kalender</i> (Senin–Minggu), sama seperti
       angka “This week” di footer kartu. Tidak ada pemilih periode: tab memaksa satu keputusan tambahan
       sebelum membaca, padahal halaman ini untuk dilihat sekilas.
-      <b>Tanpa perbandingan minggu lalu.</b> Delta “↑18%” dibuang — dengan data yang masih tipis, perbandingan
+      <b>Tanpa perbandingan minggu lalu.</b> Delta “↑18%” dibuang, karena dengan data yang masih tipis, perbandingan
       sering menyesatkan. Halaman ini menjadi potret, bukan laporan. Konsekuensinya detail cukup disimpan
       10 hari, bukan selamanya.
       <b>7 batang hari, bukan 24 jam.</b> Posisi batang tetap (Sen selalu di kiri), jadi mata bisa mengingat
       pola “Rabu biasanya tinggi”. Jam mendengarkan butuh 24 batang yang tak terbaca di lebar ini.
       <b>Top artis & top lagu dua kolom, tanpa bar.</b> Bar di daftar 5 item tidak menambah informasi;
       urutan + angka sudah cukup. Dua kolom menghemat separuh tinggi.
-      <b>Angka di kanan tiap baris berbeda menurut jenisnya</b> — artis memakai <b>total menit</b>,
+      <b>Angka di kanan tiap baris berbeda menurut jenisnya</b>: artis memakai <b>total menit</b>,
       lagu memakai <b>jumlah diputar</b> (mis. <code>12×</code>). Pertanyaannya memang beda: “berapa lama saya
       mendengar artis ini” vs “berapa kali saya memutar lagu ini”.
-      Catatan: hitungan putar di ekstensi masih perlu diperbaiki dulu — lihat <code>ROADMAP.md</code> poin 1 —
+      Catatan: hitungan putar di ekstensi masih perlu diperbaiki dulu (lihat <code>ROADMAP.md</code> poin 1)
       sebelum angka <code>12×</code> boleh tampil di produk.
       Yang sengaja tidak ditampilkan: total sepanjang waktu dan streak (sudah ada di footer kartu).
     </p>
 
     <div class="v7-compare">
       <div class="v7-card-opt">
-        <div class="v7-opt-head"><b>1. Tab tepi</b><span>tertutup 360px · +0px</span></div>
-        <p>Tab kecil 18×56 menempel di tepi, setengah menonjol. Hover = <b>peek 56px</b>, klik = buka penuh.
+        <div class="v7-opt-head"><b>1. Tab tepi</b><span>360px · tanpa tambahan lebar</span></div>
+        <p>Tab kecil 20×64 menempel di tepi, setengah menonjol. Hover = <b>peek 56px</b>, klik = buka penuh.
         Paling seimbang: terlihat tanpa berisik, dan ikut bergerak mengikuti tepi saat kartu melebar.</p>
         <p class="v7-opt-meta">Kekurangan: terlihat sedikit “dekoratif”, chevron bisa dikira menu lain.</p>
       </div>
       <div class="v7-card-opt">
-        <div class="v7-opt-head"><b>2. Grip garis</b><span>tertutup 360px · +0px</span></div>
-        <p>Hanya garis 2px di tepi yang memanjang saat di-hover. Nol elemen visual saat diam — kartu terlihat
-        benar-benar bersih. Paling elegan kalau estetika adalah prioritas.</p>
+        <div class="v7-opt-head"><b>2. Grip garis</b><span>360px · tanpa tambahan lebar</span></div>
+        <p>Hanya garis 2px di tepi yang memanjang saat di-hover. Nyaris tak terlihat saat diam, jadi kartu
+        terlihat bersih. Paling elegan kalau estetika adalah prioritas.</p>
         <p class="v7-opt-meta">Kekurangan: penemuan paling rendah. Pengguna baru kemungkinan tidak akan menemukannya.</p>
       </div>
       <div class="v7-card-opt">
-        <div class="v7-opt-head"><b>3. Rail vertikal</b><span>tertutup 386px · +26px permanen</span></div>
+        <div class="v7-opt-head"><b>3. Rail vertikal</b><span>388px · +28px permanen</span></div>
         <p>Label “Lirik” vertikal yang <b>selalu terlihat</b>. Tidak perlu di-hover untuk tahu fitur ini ada,
         dan posisinya konsisten sebagai “sisi lirik”.</p>
-        <p class="v7-opt-meta">Kekurangan: memakan 26px lebar permanen dan menambah satu elemen teks di kartu.</p>
+        <p class="v7-opt-meta">Kekurangan: memakan 28px lebar permanen dan menambah satu elemen teks di kartu.</p>
       </div>
       <div class="v7-card-opt">
-        <div class="v7-opt-head"><b>4. Baris di kartu</b><span>tertutup 360px · +11px tinggi</span></div>
-        <p>Baris “<b>♪ Lirik ›</b>” di dalam kartu. Paling mudah ditemukan dan paling konvensional — pola yang
+        <div class="v7-opt-head"><b>4. Baris di kartu</b><span>360px · +44px tinggi</span></div>
+        <p>Baris “<b>♪ Lirik ›</b>” di dalam kartu. Paling mudah ditemukan dan paling konvensional; pola yang
         sama dipakai Apple Music dan Spotify desktop.</p>
         <p class="v7-opt-meta">Kekurangan: menambah tinggi kartu, dan menyisipkan satu baris baru ke layout yang
         sekarang sudah padat.</p>
@@ -1696,7 +1767,7 @@
         <span>Activities</span>
         <span class="v6-clock">22:04</span>
         <span class="v6-sys">⌁ ▮ ▮</span>
-        <button class="v6-ind" id="v7Ind" aria-expanded="false" aria-label="Blinding Lights — The Weeknd">
+        <button class="v6-ind" id="v7Ind" aria-expanded="false" aria-label="Blinding Lights oleh The Weeknd">
           <span class="art"></span>
           <span class="v6-mini">Blinding Lights</span>
           <span class="v6-slot is-action">
@@ -1716,11 +1787,11 @@
               </div>
               <div class="ctl v7-ctl">
                 <button class="v7-ctlbtn" id="v7Prev" aria-label="Sebelumnya">
-                  <svg viewBox="0 0 24 24"><path d="M6 5h2v14H6zM20 5v14l-11-7z"/></svg>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2v14H6zM20 5v14l-11-7z"/></svg>
                 </button>
-                <button class="play" id="v7Play" aria-label="Play / pause"><svg viewBox="0 0 24 24" style="width:14px;height:14px"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
+                <button class="play" id="v7Play" aria-label="Jeda"><svg viewBox="0 0 24 24" aria-hidden="true" style="width:14px;height:14px"><path d="M7 5h4v14H7zM13 5h4v14h-4z"/></svg></button>
                 <button class="v7-ctlbtn" id="v7NextTrack" aria-label="Berikutnya">
-                  <svg viewBox="0 0 24 24"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z"/></svg>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 5h2v14h-2zM4 5l11 7-11 7z"/></svg>
                 </button>
                 <button class="v7-repeat" id="v7Repeat" aria-label="Ulangi: mati" title="Ulangi: mati">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>
@@ -1739,7 +1810,7 @@
               <span class="v7-tlabel v7-tlabel-end" id="v7Dur">3:20</span>
             </div>
             <div class="v7-foot">
-              <svg class="v7-foot-ico" viewBox="0 0 24 24"><use href="#i-note"/></svg>
+              <svg class="v7-foot-ico" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-note"/></svg>
               <span class="v7-foot-text">This week <b>3h 12m</b> · top <b>The Weeknd</b></span>
               <span class="v7-foot-stats">
                 <span class="v7-streak" title="Streak saat ini">
@@ -1767,7 +1838,7 @@
           <div class="v7-stats">
             <div class="v7-stats-head">
               <b>Statistik</b>
-              <span>Minggu ini</span>
+              <span>Minggu ini · contoh data</span>
             </div>
 
             <div class="v7-weektotal" id="v7WeekTotal">5h 30m</div>
@@ -1789,6 +1860,12 @@
             </div>
 
             <div class="v7-active" id="v7Active"></div>
+          </div>
+
+          <div class="v7-statstate" id="v7StatState" hidden aria-live="polite">
+            <p class="v7-statstate-title" id="v7StatStateTitle"></p>
+            <p class="v7-statstate-body" id="v7StatStateBody"></p>
+            <button class="v7-statstate-retry" id="v7StatRetry" type="button" hidden>Coba lagi</button>
           </div>
         </div>
 
@@ -1814,12 +1891,12 @@
       <button id="v7NoLyrics">Simulasi tanpa lirik</button>
       <label class="d-sel">Lagu
         <select id="v7Track">
-          <option value="0">Blinding Lights — The Weeknd</option>
-          <option value="1">Everlong — Foo Fighters</option>
-          <option value="2">After Dark — Mr.Kitty</option>
-          <option value="3">Black Star — Radiohead</option>
-          <option value="4">Monochrome — Interpol</option>
-          <option value="5">Ash — Portishead</option>
+          <option value="0">Blinding Lights · The Weeknd</option>
+          <option value="1">Everlong · Foo Fighters</option>
+          <option value="2">After Dark · Mr.Kitty</option>
+          <option value="3">Black Star · Radiohead</option>
+          <option value="4">Monochrome · Interpol</option>
+          <option value="5">Ash · Portishead</option>
         </select>
       </label>
       <span class="v7-accent-note" id="v7AccentNote">accent #ff4d6d</span>
@@ -1832,6 +1909,22 @@
         </select>
       </label>
       <span class="v7-variant-note" id="v7VariantNote"></span>
+      <label class="d-sel">Status statistik
+        <select id="v7DataState">
+          <option value="ready">ada</option>
+          <option value="loading">memuat</option>
+          <option value="empty">kosong</option>
+          <option value="error">galat</option>
+        </select>
+      </label>
+      <label class="d-sel">Status lirik
+        <select id="v7LyricsState">
+          <option value="ready">ada</option>
+          <option value="loading">memuat</option>
+          <option value="none">kosong</option>
+          <option value="error">galat</option>
+        </select>
+      </label>
     </div>
   </section>
 
@@ -2895,10 +2988,12 @@
   ];
 
   const v7 = {open: false, pinned: false, active: 10, playing: true, hasLyrics: true,
-    peekTimer: null, statsPeekTimer: null, track: 0, pos: 0, seeking: false, repeat: 'none'};
+    lyricsState: 'ready', dataState: 'ready',
+    peekTimer: null, statsPeekTimer: null, track: 0, pos: V7_LYRICS[10].t, seeking: false, repeat: 'none'};
 
   /* Track presets. The last two are deliberately dark/grey albums so the
-     accent correction problem is visible in the card (tint, border, icons). */
+     accent correction problem stays visible in the progress fill, active lyric
+     marker, and today bar. */
   const V7_TRACK_LIST = [
     {title: 'Blinding Lights', sub: 'The Weeknd · After Hours', accent: '#ff4d6d', duration: 200,
      art: 'linear-gradient(140deg,#ff2d55 0%,#ff9f0a 55%,#2b1b3d 100%)'},
@@ -2914,11 +3009,20 @@
      art: 'linear-gradient(140deg,#8c8c8c 0%,#b4b4b8 55%,#5a5a5e 100%)'},
   ];
 
+  function v7IsDarkAccent(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const channels = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map(v => v / 255);
+    const linear = v => v <= .04045 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4;
+    const [r, g, b] = channels.map(linear);
+    return .2126 * r + .7152 * g + .0722 * b < .06;
+  }
+
   function v7ApplyTrack(index) {
     const t = V7_TRACK_LIST[index];
     if (!t)
       return;
     v7.track = index;
+    v7Pop.classList.toggle('accent-dark', v7IsDarkAccent(t.accent));
 
     for (const el of [v7Ind, v7Pop]) {
       el.style.setProperty('--accent', t.accent);
@@ -2927,7 +3031,7 @@
 
     v7Ind.querySelector('.art').style.background = t.art;
     v7Ind.querySelector('.v6-mini').textContent = t.title;
-    v7Ind.setAttribute('aria-label', `${t.title} — ${t.sub.split(' · ')[0]}`);
+    v7Ind.setAttribute('aria-label', `${t.title} oleh ${t.sub.split(' · ')[0]}`);
 
     v7Pop.querySelector('.v7-row .art').style.background = t.art;
     v7Pop.querySelector('.v7-title').textContent = t.title;
@@ -2957,6 +3061,16 @@
 
   const v7Duration = () => V7_TRACK_LIST[v7.track].duration;
 
+  function v7ActiveFromPos(pos) {
+    let active = 0;
+    for (let i = 0; i < V7_LYRICS.length; i++) {
+      if (V7_LYRICS[i].t > pos)
+        break;
+      active = i;
+    }
+    return active;
+  }
+
   function v7RenderPlayback() {
     const duration = v7Duration();
     const pct = duration > 0 ? Math.min(1, Math.max(0, v7.pos / duration)) : 0;
@@ -2967,6 +3081,7 @@
     v7Dur.textContent = v7Clock(duration);
     v7Bar.setAttribute('aria-valuenow', String(Math.round(v7.pos)));
     v7Bar.setAttribute('aria-valuemax', String(duration));
+    v7Bar.setAttribute('aria-valuetext', `${v7Clock(v7.pos)} dari ${v7Clock(duration)}`);
 
     // pill countdown follows the same position
     const slotText = v7Ind.querySelector('.v6-slot-text');
@@ -2976,12 +3091,25 @@
     v7PlayBtn.querySelector('svg').innerHTML = v7.playing
       ? '<path d="M7 5h4v14H7zM13 5h4v14h-4z"/>'
       : '<path d="M8 5v14l11-7z"/>';
+    v7PlayBtn.setAttribute('aria-label', v7.playing ? 'Jeda' : 'Putar');
 
     v7RepeatBtn.classList.toggle('on', v7.repeat !== 'none');
     v7RepeatBtn.classList.toggle('one', v7.repeat === 'one');
     const label = `Ulangi: ${V7_REPEAT_LABEL[v7.repeat]}`;
     v7RepeatBtn.setAttribute('aria-label', label);
     v7RepeatBtn.title = label;
+
+    const active = v7ActiveFromPos(v7.pos);
+    if (active === v7.active)
+      return;
+    const hadLyricFocus = v7LinesEl.contains(document.activeElement);
+    v7.active = active;
+    v7RenderLines();
+    if (hadLyricFocus) {
+      const line = v7LinesEl.querySelector('.v7-line.active');
+      if (line)
+        line.focus({preventScroll: true});
+    }
   }
 
   function v7SeekFromEvent(event) {
@@ -3074,7 +3202,34 @@
 
   function v7RenderLines() {
     v7LinesEl.innerHTML = '';
-    if (!v7.hasLyrics) {
+    v7LinesEl.setAttribute('aria-live', 'polite');
+
+    if (v7.lyricsState === 'loading') {
+      const state = document.createElement('div');
+      state.className = 'v7-empty';
+      state.textContent = 'Memuat lirik...';
+      v7LinesEl.appendChild(state);
+      return;
+    }
+
+    if (v7.lyricsState === 'error') {
+      const state = document.createElement('div');
+      state.className = 'v7-empty';
+      state.append('Lirik gagal dimuat. ');
+      const retry = document.createElement('button');
+      retry.type = 'button';
+      retry.className = 'v7-empty-retry';
+      retry.textContent = 'Coba lagi';
+      retry.addEventListener('click', e => {
+        e.stopPropagation();
+        v7SetLyricsState('ready');
+      });
+      state.appendChild(retry);
+      v7LinesEl.appendChild(state);
+      return;
+    }
+
+    if (v7.lyricsState === 'none' || !v7.hasLyrics) {
       const empty = document.createElement('div');
       empty.className = 'v7-empty';
       empty.textContent = 'Lirik tidak tersedia untuk lagu ini';
@@ -3084,23 +3239,39 @@
 
     const start = Math.max(0, Math.min(v7.active - 2, V7_LYRICS.length - V7_VISIBLE));
     for (let i = start; i < Math.min(start + V7_VISIBLE, V7_LYRICS.length); i++) {
-      const row = document.createElement('div');
+      const row = document.createElement('button');
+      row.type = 'button';
       row.className = 'v7-line';
-      if (i === v7.active)
+      if (i === v7.active) {
         row.classList.add('active');
-      else if (i < v7.active)
+        row.setAttribute('aria-current', 'true');
+      } else if (i < v7.active) {
         row.classList.add('past');
-      else if (Math.abs(i - v7.active) === 1)
+      } else if (Math.abs(i - v7.active) === 1) {
         row.classList.add('near');
+      }
       row.textContent = V7_LYRICS[i].text;
+      row.setAttribute('aria-label', `Lompat ke lirik: ${V7_LYRICS[i].text}`);
       row.title = 'Klik untuk lompat ke baris ini';
       row.addEventListener('click', e => {
         e.stopPropagation();
-        v7.active = i;
-        v7RenderLines();
+        v7.pos = V7_LYRICS[i].t;
+        v7RenderPlayback();
       });
       v7LinesEl.appendChild(row);
     }
+  }
+
+  function v7SetLyricsState(state) {
+    v7.lyricsState = state;
+    v7.hasLyrics = state !== 'none';
+    const sel = document.getElementById('v7LyricsState');
+    if (sel)
+      sel.value = state;
+    const noBtn = document.getElementById('v7NoLyrics');
+    if (noBtn)
+      noBtn.classList.toggle('on', state === 'none');
+    v7RenderLines();
   }
 
   function v7SetLyricsOpen(open) {
@@ -3114,9 +3285,19 @@
     });
   }
 
+  function v7PlaceArrow() {
+    const pop = v7Pop.getBoundingClientRect();
+    const ind = v7Ind.getBoundingClientRect();
+    const fromRight = pop.right - (ind.left + ind.width / 2) - 5;
+    v7Pop.style.setProperty('--arrow-r',
+      Math.round(Math.max(14, Math.min(pop.width - 24, fromRight))) + 'px');
+  }
+
   function v7ToggleCard(open) {
     v7Pop.classList.toggle('open', open);
     v7Ind.setAttribute('aria-expanded', String(open));
+    if (open)
+      requestAnimationFrame(v7PlaceArrow);
     if (!open) {
       v7.pinned = false;
       v7SetLyricsOpen(false);
@@ -3147,7 +3328,7 @@
   const V7_VARIANTS = {
     tab: 'Tab kecil menempel di tepi kanan, setengah menonjol. Hover = mengintip.',
     grip: 'Garis tipis di tepi. Nyaris tak terlihat sampai di-hover. Paling tenang, paling sulit ditemukan.',
-    rail: 'Label "Lirik" vertikal yang selalu terlihat. Selalu jelas, tapi memakan 26px permanen.',
+    rail: 'Label "Lirik" vertikal yang selalu terlihat. Selalu jelas, tapi memakan 28px permanen.',
     row: 'Baris "Lirik" di dalam kartu. Paling mudah ditemukan, tapi menambah tinggi kartu.',
   };
 
@@ -3179,7 +3360,7 @@
     rows.forEach(([name, amount], i) => {
       const row = document.createElement('div');
       row.className = 'v7-item';
-      row.title = `${name} — ${fmt(amount)}`;
+      row.title = `${name}: ${fmt(amount)}`;
 
       const rank = document.createElement('span');
       rank.className = 'v7-rank';
@@ -3252,6 +3433,55 @@
     v7SetStatsOpen(!v7Pop.classList.contains('stats-open'));
   });
 
+  const V7_DATA_STATES = {
+    loading: {
+      title: 'Memuat statistik minggu ini',
+      body: 'Data diambil dari riwayat pemutaran di perangkat ini.',
+      retry: false,
+    },
+    empty: {
+      title: 'Belum ada data minggu ini',
+      body: 'Putar lagu di Spotify, lalu buka lagi. Statistik muncul setelah ada lagu yang diputar.',
+      retry: false,
+    },
+    error: {
+      title: 'Statistik gagal dimuat',
+      body: 'Riwayat pemutaran tidak bisa dibaca. Coba lagi.',
+      retry: true,
+    },
+  };
+
+  const v7DataStateSel = document.getElementById('v7DataState');
+  const v7StatsContent = v7Pop.querySelector('.v7-stats');
+  const v7StatState = document.getElementById('v7StatState');
+  const v7StatStateTitle = document.getElementById('v7StatStateTitle');
+  const v7StatStateBody = document.getElementById('v7StatStateBody');
+  const v7StatRetry = document.getElementById('v7StatRetry');
+
+  function v7ApplyDataState(state) {
+    v7.dataState = state;
+    const alt = state !== 'ready';
+    v7Pop.classList.toggle('data-alt', alt);
+    v7StatsContent.hidden = alt;
+    v7StatState.hidden = !alt;
+    v7StatState.classList.toggle('loading', state === 'loading');
+    v7Pop.setAttribute('aria-busy', state === 'loading' ? 'true' : 'false');
+    if (!alt)
+      return;
+    const copy = V7_DATA_STATES[state];
+    v7StatStateTitle.textContent = copy.title;
+    v7StatStateBody.textContent = copy.body;
+    v7StatRetry.hidden = !copy.retry;
+    v7ToggleCard(true);
+    v7SetStatsOpen(true);
+  }
+
+  v7DataStateSel.addEventListener('change', () => v7ApplyDataState(v7DataStateSel.value));
+  v7StatRetry.addEventListener('click', () => {
+    v7DataStateSel.value = 'ready';
+    v7ApplyDataState('ready');
+  });
+
   v7RenderStats();
 
   const v7HoverNote = document.getElementById('v7HoverNote');
@@ -3307,7 +3537,7 @@
   /* Same "intip" behaviour for the stats grip, but vertically.
      The grip is anchored to the card's bottom edge, so expanding the drawer
      moves it away from a stationary cursor. Reacting to that mouseleave would
-     close the drawer, bring the grip back under the cursor and reopen it —
+     close the drawer, bring the grip back under the cursor and reopen it,
      an open/close loop. So: ignore the leave while the pointer is still inside
      the card, and collapse only when the pointer really leaves the card. */
   const v7StatsPeek = document.getElementById('v7StatsTab');
@@ -3349,13 +3579,19 @@
     v7SetLyricsOpen(!v7.open);
   });
   document.getElementById('v7Next').addEventListener('click', () => {
-    v7.active = Math.min(v7.active + 1, V7_LYRICS.length - 1);
-    v7RenderLines();
+    const next = Math.min(v7.active + 1, V7_LYRICS.length - 1);
+    v7.pos = V7_LYRICS[next].t;
+    v7RenderPlayback();
   });
-  document.getElementById('v7NoLyrics').addEventListener('click', e => {
-    v7.hasLyrics = !v7.hasLyrics;
-    e.target.classList.toggle('on', !v7.hasLyrics);
-    v7RenderLines();
+  document.getElementById('v7NoLyrics').addEventListener('click', () => {
+    v7SetLyricsState(v7.lyricsState === 'none' ? 'ready' : 'none');
+  });
+
+  const v7LyricsStateSel = document.getElementById('v7LyricsState');
+  v7LyricsStateSel.addEventListener('change', () => {
+    v7SetLyricsState(v7LyricsStateSel.value);
+    v7ToggleCard(true);
+    v7SetLyricsOpen(true);
   });
 
   v7Ind.addEventListener('click', () => v7ToggleCard(!v7Pop.classList.contains('open')));

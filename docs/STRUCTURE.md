@@ -8,12 +8,21 @@ utamanya. Untuk cara memasang dan memakai ekstensi, lihat
 
 ```text
 sonora/
+├── .github/
+│   └── workflows/
+│       └── security.yml
+├── .editorconfig
+├── .gitignore
+├── .gitleaks.toml
+├── .semgrepignore
+├── DESIGN.md
+├── LICENSE
+├── Makefile
+├── README.md
 ├── metadata.json
 ├── extension.js
 ├── prefs.js
 ├── stylesheet.css
-├── Makefile
-├── README.md
 ├── schemas/
 │   └── org.gnome.shell.extensions.spotify-ext.gschema.xml
 ├── icons/
@@ -46,6 +55,7 @@ sonora/
 │   └── util/
 │       ├── art.js
 │       ├── color.js
+│       ├── palette.js
 │       └── path.js
 ├── tests/
 │   ├── run.js
@@ -54,6 +64,7 @@ sonora/
 │   ├── fake-spotify.js
 │   └── run-headless.sh
 └── docs/
+    ├── AUDIT.md
     ├── IDEAS.md
     ├── ROADMAP.md
     ├── STRUCTURE.md
@@ -108,6 +119,7 @@ digunakan lintas modul.
 - `make test` menjalankan `tests/run.js`; tiap berkas test dijalankan pada
   proses GJS terpisah.
 - `make schemas` mengompilasi skema GSettings.
+- `make security` menjalankan Gitleaks dan Semgrep.
 - `make pack` membuat arsip ekstensi di `dist/`.
 - `make install` memasang symlink lokal dan mengompilasi skema.
 - `make headless` menjalankan GNOME Shell headless bersama fake Spotify pada
@@ -116,6 +128,21 @@ digunakan lintas modul.
 Shell mengimpor modul JavaScript sebagai ESM, sehingga proyek tidak
 membutuhkan bundler untuk pemuatan kode saat ini. `stylesheet.css` tetap satu
 file di root karena itulah stylesheet yang dimuat ekstensi.
+
+## Keamanan dan rilis
+
+- `make security` menjalankan Gitleaks untuk secret scanning dan Semgrep untuk
+  SAST.
+- `.github/workflows/security.yml` menjalankan keduanya pada push dan pull
+  request.
+- `.gitleaks.toml` hanya memakai allowlist regex untuk token internal; file
+  sumber tetap dipindai.
+- `.semgrepignore` mengabaikan build, schema terkompilasi, dan mockup web;
+  workflow CI sengaja tetap dipindai.
+- `make pack` menyertakan `LICENSE`, `README.md`, dan schema XML, tetapi tidak
+  menyertakan schema terkompilasi, tests, docs, atau konfigurasi CI.
+- `metadata.json` wajib punya `url` yang menunjuk ke repository sebelum dikirim
+  ke extensions.gnome.org.
 
 ## Prinsip pemeliharaan
 
