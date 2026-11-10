@@ -1,5 +1,6 @@
 # Build output
 schemas/gschemas.compiled
+locale/
 
 # Release packages
 *.zip

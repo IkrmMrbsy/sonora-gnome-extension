@@ -4,14 +4,15 @@ DIST       := dist
 SCHEMA_DIR := schemas
 SOURCES    := extension.js prefs.js src
 
-.PHONY: all help schemas lint test security pack install uninstall headless clean
+.PHONY: all help schemas locales lint test security pack install uninstall headless clean
 
-all: lint test schemas
+all: lint test schemas locales
 
 help:
 	@echo "Sonora - available targets"
 	@echo ""
 	@echo "  make schemas    Compile the GSettings schema (required before first run)"
+	@echo "  make locales    Compile gettext translations into locale/ binary catalogs"
 	@echo "  make lint       Parse-check every JavaScript file"
 	@echo "  make test       Run the unit tests"
 	@echo "  make security   Run Gitleaks and Semgrep"
@@ -23,6 +24,9 @@ help:
 
 schemas:
 	glib-compile-schemas $(SCHEMA_DIR)
+
+locales:
+	@python3 dev/compile-locales.py
 
 lint:
 	@set -e; for f in $$(find . -name '*.js' -not -path './node_modules/*' \
@@ -42,15 +46,16 @@ security:
 	@gitleaks git --config .gitleaks.toml --redact
 	@semgrep scan --config auto --error
 
-pack: 
+pack: locales
 	@rm -rf $(DIST) && mkdir -p $(DIST)/$(UUID)
 	@cp metadata.json extension.js prefs.js stylesheet.css README.md LICENSE $(DIST)/$(UUID)/
 	@cp -r $(SOURCES) icons $(SCHEMA_DIR) $(DIST)/$(UUID)/
+	@if [ -d locale ]; then cp -r locale $(DIST)/$(UUID)/; fi
 	@rm -f $(DIST)/$(UUID)/$(SCHEMA_DIR)/gschemas.compiled
 	@cd $(DIST) && zip -qr $(NAME).zip $(UUID)
 	@echo "built $(DIST)/$(NAME).zip"
 
-install: schemas
+install: schemas locales
 	@mkdir -p ~/.local/share/gnome-shell/extensions
 	@rm -rf ~/.local/share/gnome-shell/extensions/$(UUID)
 	@ln -s "$(CURDIR)" ~/.local/share/gnome-shell/extensions/$(UUID)
@@ -65,6 +70,6 @@ headless: schemas
 	@./dev/run-headless.sh
 
 clean:
-	@rm -rf $(DIST)
+	@rm -rf $(DIST) locale
 	@rm -f $(SCHEMA_DIR)/gschemas.compiled
 	@echo "clean"
