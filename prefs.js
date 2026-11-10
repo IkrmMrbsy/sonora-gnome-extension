@@ -6,7 +6,7 @@ import Gtk from 'gi://Gtk?version=4.0';
 import Pango from 'gi://Pango';
 import PangoCairo from 'gi://PangoCairo';
 
-import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
+import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 import {getSettings} from './src/core/settings.js';
 import {extensionDir} from './src/util/path.js';
@@ -16,17 +16,28 @@ import {
   presetById,
 } from './src/util/palette.js';
 
-const MODES = [['icon', 'Ikon saja'], ['pill', 'Cover + judul + status']];
-const POSITIONS = [['left', 'Kiri'], ['center', 'Tengah'], ['right', 'Kanan']];
-const BG_MODES = [['album', 'Ikuti warna album'], ['solid', 'Warna solid']];
-const CARD_OPEN = [['hover', 'Saat kursor diarahkan'], ['click', 'Hanya saat diklik'],
-  ['both', 'Kursor atau klik']];
-const DUCK_MODES = [['off', 'Jangan ganggu musik'], ['duck', 'Kecilkan volume'],
-  ['pause', 'Jeda sampai mikrofon selesai']];
+const getModes = () => [['icon', _('Icon only')], ['pill', _('Cover, title and status')]];
+const getPositions = () => [['left', _('Left')], ['center', _('Center')], ['right', _('Right')]];
+const getBgModes = () => [['album', _('Follow album color')], ['solid', _('Solid preset')]];
+const getCardOpen = () => [
+  ['hover', _('On hover')],
+  ['click', _('On click only')],
+  ['both', _('Hover or click')],
+];
+const getDuckModes = () => [
+  ['off', _('Do not disturb music')],
+  ['duck', _('Lower volume')],
+  ['pause', _('Pause until microphone is free')],
+];
 const DUCK_LEVELS = [[10, '10%'], [20, '20%'], [30, '30%'], [40, '40%'],
   [50, '50%'], [60, '60%'], [70, '70%']];
-const SLEEP = [[0, 'Nonaktif'], [15, '15 menit'], [30, '30 menit'],
-  [45, '45 menit'], [60, '60 menit']];
+const getSleep = () => [
+  [0, _('Disabled')],
+  [15, _('15 minutes')],
+  [30, _('30 minutes')],
+  [45, _('45 minutes')],
+  [60, _('60 minutes')],
+];
 
 const PREVIEW_ACCENT = [255, 77, 109];
 const PRESET_DOT_CSS = BACKGROUND_PRESETS.map(preset => `
@@ -272,7 +283,7 @@ function buildPresetPicker(settings) {
 
     const button = new Gtk.ToggleButton({child: content});
     button.add_css_class('sonora-swatch');
-    button.set_tooltip_text(`${preset.label} — ${preset.bg}`);
+    button.set_tooltip_text(`${preset.label}: ${preset.bg}`);
 
     button.connect('toggled', () => {
       if (syncing)
@@ -324,18 +335,18 @@ function buildHero(settings) {
     valign: Gtk.Align.CENTER,
   });
 
-  const eyebrow = new Gtk.Label({label: 'SONORA', xalign: 0});
+  const eyebrow = new Gtk.Label({label: _('SONORA'), xalign: 0});
   eyebrow.add_css_class('sonora-eyebrow');
 
   const title = new Gtk.Label({
-    label: 'The music companion for GNOME.',
+    label: _('The music companion for GNOME.'),
     xalign: 0,
     wrap: true,
   });
   title.add_css_class('sonora-hero-title');
 
   const subtitle = new Gtk.Label({
-    label: 'Panel now playing, lirik tersinkron, dan statistik mendengarkan — tanpa login.',
+    label: _('Now-playing panel, synced lyrics, and listening stats, without login.'),
     xalign: 0,
     wrap: true,
   });
@@ -345,6 +356,18 @@ function buildHero(settings) {
   text.append(title);
   text.append(subtitle);
 
+  const previewBox = new Gtk.Box({
+    orientation: Gtk.Orientation.VERTICAL,
+    spacing: 4,
+    valign: Gtk.Align.CENTER,
+  });
+
+  const previewLabel = new Gtk.Label({
+    label: _('Preview'),
+    xalign: 1,
+  });
+  previewLabel.add_css_class('sonora-field-hint');
+
   const preview = new Gtk.DrawingArea();
   preview.set_content_width(300);
   preview.set_content_height(160);
@@ -353,53 +376,73 @@ function buildHero(settings) {
     drawPreview(area, cr, width, height, settings);
   });
 
+  previewBox.append(previewLabel);
+  previewBox.append(preview);
+
   hero.append(text);
-  hero.append(preview);
+  hero.append(previewBox);
 
   return {hero, preview};
 }
 
 export default class SonoraPreferences extends ExtensionPreferences {
   fillPreferencesWindow(window) {
+    this.initTranslations();
     loadCss();
 
     const settings = getSettings();
+    const modes = getModes();
+    const positions = getPositions();
+    const bgModes = getBgModes();
+    const cardOpenModes = getCardOpen();
+    const duckModes = getDuckModes();
+    const sleepModes = getSleep();
 
-    const page = new Adw.PreferencesPage();
-    window.add(page);
+    // --- Page 1: Appearance ---
+    const lookPage = new Adw.PreferencesPage({
+      title: _('Appearance'),
+      icon_name: 'preferences-desktop-theme-symbolic',
+    });
+    window.add(lookPage);
 
     const heroGroup = new Adw.PreferencesGroup();
-    page.add(heroGroup);
+    lookPage.add(heroGroup);
 
     const {hero, preview} = buildHero(settings);
     heroGroup.add(hero);
 
-    const look = new Adw.PreferencesGroup({
-      title: 'Tampilan',
-      description: 'Atur indikator panel dan latar kartu now playing.',
+    const panelGroup = new Adw.PreferencesGroup({
+      title: _('Panel Indicator'),
+      description: _('Display format and position on the top bar.'),
     });
-    page.add(look);
+    lookPage.add(panelGroup);
 
-    const mode = comboRow(MODES);
-    mode.title = 'Indikator panel';
-    mode.subtitle = 'Ikon ringkas atau cover lengkap dengan judul.';
+    const mode = comboRow(modes);
+    mode.title = _('Indicator style');
+    mode.subtitle = _('Compact icon, or full cover with title and status.');
     addIcon(mode, 'video-display-symbolic');
-    bindString(settings, 'mode', mode, MODES, window);
-    look.add(mode);
+    bindString(settings, 'mode', mode, modes, window);
+    panelGroup.add(mode);
 
-    const position = comboRow(POSITIONS);
-    position.title = 'Posisi';
-    position.subtitle = 'Tempat indikator bersandar di panel atas.';
+    const position = comboRow(positions);
+    position.title = _('Position');
+    position.subtitle = _('Where the indicator sits on the top bar.');
     addIcon(position, 'view-grid-symbolic');
-    bindString(settings, 'position', position, POSITIONS, window);
-    look.add(position);
+    bindString(settings, 'position', position, positions, window);
+    panelGroup.add(position);
 
-    const cardBg = comboRow(BG_MODES);
-    cardBg.title = 'Latar kartu & pill';
-    cardBg.subtitle = 'Ikuti warna album, atau pakai warna solid.';
+    const bgGroup = new Adw.PreferencesGroup({
+      title: _('Background & Color'),
+      description: _('Color styling for the now-playing card and panel pill.'),
+    });
+    lookPage.add(bgGroup);
+
+    const cardBg = comboRow(bgModes);
+    cardBg.title = _('Background style');
+    cardBg.subtitle = _('Follow album artwork, or use a solid preset.');
     addIcon(cardBg, 'preferences-desktop-theme-symbolic');
-    bindString(settings, 'card-bg', cardBg, BG_MODES, window);
-    look.add(cardBg);
+    bindString(settings, 'card-bg', cardBg, bgModes, window);
+    bgGroup.add(cardBg);
 
     const picker = buildPresetPicker(settings);
     const presetSection = new Gtk.Box({
@@ -409,10 +452,10 @@ export default class SonoraPreferences extends ExtensionPreferences {
       margin_bottom: 6,
     });
 
-    const presetTitle = new Gtk.Label({label: 'Warna latar', xalign: 0});
+    const presetTitle = new Gtk.Label({label: _('Solid preset'), xalign: 0});
     presetTitle.add_css_class('sonora-field-title');
     const presetHint = new Gtk.Label({
-      label: 'Preset ini aktif saat latar memakai warna solid.',
+      label: _('This preset is active when solid background is selected.'),
       xalign: 0,
       wrap: true,
     });
@@ -421,18 +464,31 @@ export default class SonoraPreferences extends ExtensionPreferences {
     presetSection.append(presetTitle);
     presetSection.append(picker.flow);
     presetSection.append(presetHint);
-    look.add(presetSection);
+    bgGroup.add(presetSection);
 
-    const cardOpen = comboRow(CARD_OPEN);
-    cardOpen.title = 'Kartu terbuka';
-    cardOpen.subtitle = 'Kapan kartu now playing muncul.';
+    // --- Page 2: Behavior ---
+    const behaviorPage = new Adw.PreferencesPage({
+      title: _('Behavior'),
+      icon_name: 'media-playback-start-symbolic',
+    });
+    window.add(behaviorPage);
+
+    const cardGroup = new Adw.PreferencesGroup({
+      title: _('Card Interaction'),
+      description: _('How the now-playing popup card is revealed.'),
+    });
+    behaviorPage.add(cardGroup);
+
+    const cardOpen = comboRow(cardOpenModes);
+    cardOpen.title = _('Card activation');
+    cardOpen.subtitle = _('When the now-playing card appears.');
     addIcon(cardOpen, 'input-mouse-symbolic');
-    bindString(settings, 'card-open', cardOpen, CARD_OPEN, window);
-    look.add(cardOpen);
+    bindString(settings, 'card-open', cardOpen, cardOpenModes, window);
+    cardGroup.add(cardOpen);
 
     const hoverDelay = new Adw.SpinRow({
-      title: 'Jeda sebelum terbuka',
-      subtitle: 'Mili-detik setelah kursor berhenti di indikator',
+      title: _('Hover delay'),
+      subtitle: _('Milliseconds to wait before the card opens on hover'),
       adjustment: new Gtk.Adjustment({
         lower: 0,
         upper: 2000,
@@ -442,59 +498,111 @@ export default class SonoraPreferences extends ExtensionPreferences {
     });
     addIcon(hoverDelay, 'preferences-system-time-symbolic');
     settings.bind('hover-delay', hoverDelay, 'value', 0);
-    look.add(hoverDelay);
+    cardGroup.add(hoverDelay);
 
-    const behavior = new Adw.PreferencesGroup({
-      title: 'Perilaku',
-      description: 'Lirik dan pengatur waktu pemutaran.',
+    const playbackGroup = new Adw.PreferencesGroup({
+      title: _('Lyrics & Timing'),
+      description: _('Synced lyrics display and playback sleep timer.'),
     });
-    page.add(behavior);
+    behaviorPage.add(playbackGroup);
 
     const lyrics = new Adw.SwitchRow({
-      title: 'Tampilkan lirik',
-      subtitle: 'Lirik tersinkron di kartu now playing',
+      title: _('Show lyrics'),
+      subtitle: _('Synced lyrics drawer on the now-playing card'),
     });
     addIcon(lyrics, 'audio-x-generic-symbolic');
     bindBool(settings, 'lyrics-visible', lyrics);
-    behavior.add(lyrics);
+    playbackGroup.add(lyrics);
 
-    const sleep = comboRow(SLEEP);
-    sleep.title = 'Sleep timer';
-    sleep.subtitle = 'Musik di-fade lalu pause setelah durasi ini';
+    const sleep = comboRow(sleepModes);
+    sleep.title = _('Sleep timer');
+    sleep.subtitle = _('Fade out and pause music after this duration');
     addIcon(sleep, 'weather-clear-night-symbolic');
-    bindInt(settings, 'sleep-minutes', sleep, SLEEP, window);
-    behavior.add(sleep);
+    bindInt(settings, 'sleep-minutes', sleep, sleepModes, window);
+    playbackGroup.add(sleep);
 
-    const mic = new Adw.PreferencesGroup({
-      title: 'Mikrofon',
-      description: 'Apa yang terjadi saat aplikasi lain memakai mikrofon.',
+    const micGroup = new Adw.PreferencesGroup({
+      title: _('Microphone'),
+      description: _('Automatic behavior when other applications use the microphone.'),
     });
-    page.add(mic);
+    behaviorPage.add(micGroup);
 
-    const duckMode = comboRow(DUCK_MODES);
-    duckMode.title = 'Saat mikrofon dipakai';
+    const duckMode = comboRow(duckModes);
+    duckMode.title = _('When microphone is in use');
     addIcon(duckMode, 'audio-input-microphone-symbolic');
-    bindString(settings, 'duck-mode', duckMode, DUCK_MODES, window);
-    mic.add(duckMode);
+    bindString(settings, 'duck-mode', duckMode, duckModes, window);
+    micGroup.add(duckMode);
 
     const duckLevel = comboRow(DUCK_LEVELS);
-    duckLevel.title = 'Volume saat dikecilkan';
-    duckLevel.subtitle = 'Persentase dari volume semula';
+    duckLevel.title = _('Ducked volume level');
+    duckLevel.subtitle = _('Percentage of original playback volume kept');
     addIcon(duckLevel, 'audio-volume-medium-symbolic');
     bindInt(settings, 'duck-level', duckLevel, DUCK_LEVELS, window);
-    mic.add(duckLevel);
+    micGroup.add(duckLevel);
 
-    const about = new Adw.PreferencesGroup({title: 'Tentang'});
-    page.add(about);
+    // --- Page 3: About ---
+    const aboutPage = new Adw.PreferencesPage({
+      title: _('About'),
+      icon_name: 'help-about-symbolic',
+    });
+    window.add(aboutPage);
 
+    const appGroup = new Adw.PreferencesGroup();
     const aboutRow = new Adw.ActionRow({
-      title: 'Sonora',
-      subtitle: 'The music companion for GNOME. Data tetap lokal, tanpa login.',
+      title: _('Sonora'),
+      subtitle: _('Music companion for GNOME Shell'),
     });
     const flame = Gio.icon_new_for_string(
       `${extensionDir()}/icons/sonora-flame-symbolic.svg`);
     aboutRow.add_prefix(new Gtk.Image({gicon: flame, pixel_size: 28}));
-    about.add(aboutRow);
+    appGroup.add(aboutRow);
+
+    const versionRow = new Adw.ActionRow({
+      title: _('Extension Version'),
+      subtitle: _('Version 3.0 (GNOME Shell 50)'),
+    });
+    addIcon(versionRow, 'application-x-executable-symbolic');
+    appGroup.add(versionRow);
+    aboutPage.add(appGroup);
+
+    const privacyGroup = new Adw.PreferencesGroup({
+      title: _('Privacy & Data'),
+      description: _('Listening statistics are stored strictly locally at ~/.local/share/spotify-ext/stats.json.'),
+    });
+    const privacyRow = new Adw.ActionRow({
+      title: _('No Account & No Telemetry'),
+      subtitle: _('Zero tracking or listening data sent to external servers.'),
+    });
+    addIcon(privacyRow, 'security-high-symbolic');
+    privacyGroup.add(privacyRow);
+    aboutPage.add(privacyGroup);
+
+    const linksGroup = new Adw.PreferencesGroup({
+      title: _('Project & License'),
+    });
+    const sourceRow = new Adw.ActionRow({
+      title: _('Source Code & Contributions'),
+      subtitle: _('Open repository on GitHub'),
+      activatable: true,
+    });
+    addIcon(sourceRow, 'software-update-available-symbolic');
+    sourceRow.add_suffix(new Gtk.Image({icon_name: 'go-next-symbolic', pixel_size: 16}));
+    sourceRow.connect('activated', () => {
+      try {
+        Gio.AppInfo.launch_default_for_uri('https://github.com/IkrmMrbsy/sonora-gnome-extension', null);
+      } catch {
+        // Ignored if no default URI handler
+      }
+    });
+    linksGroup.add(sourceRow);
+
+    const licenseRow = new Adw.ActionRow({
+      title: _('License'),
+      subtitle: _('GNU General Public License v3.0 (GPL-3.0)'),
+    });
+    addIcon(licenseRow, 'emblem-documents-symbolic');
+    linksGroup.add(licenseRow);
+    aboutPage.add(linksGroup);
 
     const syncDuckLevel = () => {
       duckLevel.sensitive = settings.get_string('duck-mode') === 'duck';
@@ -519,6 +627,6 @@ export default class SonoraPreferences extends ExtensionPreferences {
         settings.disconnect(id);
     });
 
-    window.set_default_size(720, 820);
+    window.set_default_size(680, 620);
   }
 }
