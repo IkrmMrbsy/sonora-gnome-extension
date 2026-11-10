@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [ master, main, restructure ]
+  pull_request:
+    branches: [ master, main, restructure ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@1e60f620b9541d16bece96c5465dc8ee9832be0b # v4.0.3
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gjs \
+            libglib2.0-bin \
+            gir1.2-soup-3.0 \
+            gir1.2-gdkpixbuf-2.0 \
+            zip
+
+      - name: Run Lint
+        run: make lint
+
+      - name: Compile Schemas
+        run: make schemas
+
+      - name: Run Unit Tests
+        run: make test
+
+      - name: Build Extension Package
+        run: make pack
+
+      - name: Upload Extension Artifact
+        uses: actions/upload-artifact@b4b15b8c7c6ac21ea08fcf65892d2ee8f75cf88e # v4.4.3
+        with:
+          name: sonora-extension
+          path: dist/sonora.zip
+          retention-days: 14

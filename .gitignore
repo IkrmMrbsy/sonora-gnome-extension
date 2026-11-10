@@ -6,6 +6,9 @@ schemas/gschemas.compiled
 dist/
 .build/
 
+# Security scan output
+*.sarif
+
 # Editor and OS noise
 *~
 *.swp

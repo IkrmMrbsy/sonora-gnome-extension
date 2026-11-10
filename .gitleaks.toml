@@ -1,0 +1,12 @@
+# Konfigurasi Gitleaks untuk Sonora
+title = "Sonora Gitleaks Config"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Abaikan token pembatalan request asinkron yang bukan kredensial"
+regexes = [
+  '''\b_lyricsToken\b''',
+  '''\bRequestToken\b'''
+]

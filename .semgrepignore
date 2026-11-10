@@ -1,0 +1,13 @@
+# Workflow .github sengaja tidak diabaikan agar konfigurasi CI ikut dipindai.
+
+# Folder hasil build zip
+dist/
+
+# Skema biner yang dikompilasi
+schemas/gschemas.compiled
+
+# Halaman prototipe web mockup
+docs/mockup/
+
+# Folder internal git
+.git/
