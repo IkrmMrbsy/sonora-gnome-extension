@@ -12,8 +12,7 @@ Dokumen ini berisi panduan dan batasan wajib untuk pengembangan ekstensi Sonora 
 - **Satu Aksen Warna**: Hanya satu aksen aktif (dari album art atau preset latar). Tidak mencampur aksen album dengan aksen preset.
 - **Batas Kontras**: Teks wajib mencapai rasio kontras minimal 4.5:1 terhadap surface yang dirender (hindari alpha teks 30%–40% di `stylesheet.css`).
 - **Standar Bahasa & Copy**:
-  - Teks Shell UI menggunakan bahasa Inggris ringkas (`Nothing playing`, `This week`, dll.).
-  - Label dan deskripsi preferensi menggunakan bahasa Indonesia (`Tampilan`, `Perilaku`, dll.).
+  - Teks Shell UI dan Preferences menggunakan bahasa Inggris ringkas sebagai bahasa dasar (`Nothing playing`, `Appearance`, `Behavior`, dll.) dengan gettext `_()` untuk dukungan translasi.
   - Jangan gunakan tanda pisah em-dash (`—`) dalam teks UI; gunakan koma, titik dua, atau tanda kurung.
 - **Aksesibilitas & Feedback**: Setiap kontrol ikon wajib memiliki `accessible_name`. Tidak mengandalkan warna semata untuk menandakan state (contoh: paused harus mengubah glyph tombol play).
 

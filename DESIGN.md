@@ -536,15 +536,12 @@ Aturan:
 
 ### Kontrak bahasa
 
-- Copy surface Shell berbahasa Inggris dan ringkas: `Nothing playing`,
-  `This week`, `No lyrics for this track`, `STATISTICS`, `TOP ARTISTS`.
-- Copy kontrol Preferences berbahasa Indonesia: `Tampilan`, `Ikon saja`,
-  `Latar kartu & pill`, `Jeda sebelum terbuka`.
-- Brand line boleh tetap bahasa Inggris: `The music companion for GNOME.`
+- Copy surface Shell dan Preferences berbahasa Inggris ringkas sebagai bahasa
+  dasar (base language): `Nothing playing`, `This week`, `Appearance`, `Behavior`,
+  `About`, dibungkus dengan gettext (`_()`) untuk translasi multi-bahasa.
+- Brand line: `The music companion for GNOME.`
 - Nama preset seperti `Midnight` dan `Graphite` adalah nama tema, bukan kalimat
-  UI, jadi boleh tetap bahasa Inggris.
-- Jangan mencampur Indonesia dan Inggris dalam satu kalimat atau satu label
-  kontrol.
+  UI, jadi tetap bahasa Inggris.
 
 ### Voice
 
