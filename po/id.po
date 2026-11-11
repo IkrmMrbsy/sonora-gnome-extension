@@ -4,10 +4,10 @@
 #
 msgid ""
 msgstr ""
-"Project-Id-Version: spotify-ext 3.0\n"
+"Project-Id-Version: spotify-ext 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
 "POT-Creation-Date: 2026-11-10 18:00+0700\n"
-"PO-Revision-Date: 2026-11-10 18:03+0700\n"
+"PO-Revision-Date: 2026-11-10 18:30+0700\n"
 "Last-Translator: Ikram Marbasy\n"
 "Language-Team: Indonesian <id@li.org>\n"
 "Language: id\n"
@@ -15,266 +15,370 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: prefs.js:34
-msgid "Appearance"
-msgstr "Tampilan"
-
-#: prefs.js:35
-msgid "Behavior"
-msgstr "Perilaku"
-
-#: prefs.js:36
-msgid "About"
-msgstr "Tentang"
-
-#: prefs.js:46
-msgid "Panel Indicator"
-msgstr "Indikator Panel"
-
-#: prefs.js:47
-msgid "Display format and position on the top bar."
-msgstr "Format tampilan dan posisi pada bilah atas."
-
-#: prefs.js:51
-msgid "Position"
-msgstr "Posisi"
-
-#: prefs.js:52
-msgid "Where the indicator sits on the top bar."
-msgstr "Posisi indikator pada bilah atas."
-
-#: prefs.js:54
-msgid "Left"
-msgstr "Kiri"
-
-#: prefs.js:55
-msgid "Center"
-msgstr "Tengah"
-
-#: prefs.js:56
-msgid "Right"
-msgstr "Kanan"
-
-#: prefs.js:65
-msgid "Indicator style"
-msgstr "Gaya indikator"
-
-#: prefs.js:66
-msgid "Compact icon, or full cover with title and status."
-msgstr "Ikon ringkas, atau sampul lengkap dengan judul dan status."
-
-#: prefs.js:68
-msgid "Cover, title and status"
-msgstr "Sampul, judul, dan status"
-
-#: prefs.js:69
+#: prefs.js:21
 msgid "Icon only"
 msgstr "Hanya ikon"
 
-#: prefs.js:77
-msgid "Background & Color"
-msgstr "Latar Belakang & Warna"
+#: prefs.js:21
+msgid "Cover, title and status"
+msgstr "Sampul, judul, dan status"
 
-#: prefs.js:78
-msgid "Color styling for the now-playing card and panel pill."
-msgstr "Gaya warna untuk kartu pemutar dan pil panel."
+#: prefs.js:22
+msgid "Left"
+msgstr "Kiri"
 
-#: prefs.js:82
-msgid "Background style"
-msgstr "Gaya latar belakang"
+#: prefs.js:22
+msgid "Center"
+msgstr "Tengah"
 
-#: prefs.js:83
-msgid "Follow album artwork, or use a solid preset."
-msgstr "Ikuti sampul album, atau gunakan preset solid."
+#: prefs.js:22
+msgid "Right"
+msgstr "Kanan"
 
-#: prefs.js:85
+#: prefs.js:23
 msgid "Follow album color"
 msgstr "Ikuti warna album"
 
-#: prefs.js:86 prefs.js:95
+#: prefs.js:23 prefs.js:461
 msgid "Solid preset"
 msgstr "Preset solid"
 
-#: prefs.js:96
-msgid "This preset is active when solid background is selected."
-msgstr "Preset ini aktif saat latar belakang solid dipilih."
+#: prefs.js:25
+msgid "On hover"
+msgstr "Saat kursor melayang"
 
-#: prefs.js:107
-msgid "Lyrics & Timing"
-msgstr "Lirik & Pewaktu"
-
-#: prefs.js:108
-msgid "Synced lyrics display and playback sleep timer."
-msgstr "Tampilan lirik tersinkronisasi dan pewaktu tidur pemutaran."
-
-#: prefs.js:112
-msgid "Show lyrics"
-msgstr "Tampilkan lirik"
-
-#: prefs.js:113
-msgid "Synced lyrics drawer on the now-playing card"
-msgstr "Laci lirik tersinkronisasi pada kartu pemutar"
-
-#: prefs.js:119
-msgid "Sleep timer"
-msgstr "Pewaktu tidur"
-
-#: prefs.js:120
-msgid "Fade out and pause music after this duration"
-msgstr "Redupkan dan jeda musik setelah durasi ini"
-
-#: prefs.js:122
-msgid "Disabled"
-msgstr "Nonaktif"
-
-#: prefs.js:123
-msgid "15 minutes"
-msgstr "15 menit"
-
-#: prefs.js:124
-msgid "30 minutes"
-msgstr "30 menit"
-
-#: prefs.js:125
-msgid "45 minutes"
-msgstr "45 menit"
-
-#: prefs.js:126
-msgid "60 minutes"
-msgstr "60 menit"
-
-#: prefs.js:134
-msgid "Microphone"
-msgstr "Mikrofon"
-
-#: prefs.js:135
-msgid "Automatic behavior when other applications use the microphone."
-msgstr "Perilaku otomatis saat aplikasi lain menggunakan mikrofon."
-
-#: prefs.js:139
-msgid "When microphone is in use"
-msgstr "Saat mikrofon digunakan"
-
-#: prefs.js:141
-msgid "Do not disturb music"
-msgstr "Jangan ganggu musik"
-
-#: prefs.js:142
-msgid "Lower volume"
-msgstr "Turunkan volume"
-
-#: prefs.js:143
-msgid "Pause until microphone is free"
-msgstr "Jeda hingga mikrofon bebas"
-
-#: prefs.js:152
-msgid "Ducked volume level"
-msgstr "Tingkat reduksi volume"
-
-#: prefs.js:153
-msgid "Percentage of original playback volume kept"
-msgstr "Persentase volume pemutaran asli yang dipertahankan"
-
-#: prefs.js:164
-msgid "Card Interaction"
-msgstr "Interaksi Kartu"
-
-#: prefs.js:165
-msgid "How the now-playing popup card is revealed."
-msgstr "Bagaimana kartu sembulan pemutar dimunculkan."
-
-#: prefs.js:169
-msgid "Card activation"
-msgstr "Aktivasi kartu"
-
-#: prefs.js:170
-msgid "When the now-playing card appears."
-msgstr "Kapan kartu pemutar ditampilkan."
-
-#: prefs.js:172
+#: prefs.js:26
 msgid "On click only"
 msgstr "Hanya saat diklik"
 
-#: prefs.js:173
+#: prefs.js:27
 msgid "Hover or click"
 msgstr "Saat kursor melayang atau diklik"
 
-#: prefs.js:182
-msgid "Hover delay"
-msgstr "Jeda melayang"
+#: prefs.js:30
+msgid "Do not disturb music"
+msgstr "Jangan ganggu musik"
 
-#: prefs.js:183
-msgid "Milliseconds to wait before the card opens on hover"
-msgstr "Milidetik untuk menunggu sebelum kartu terbuka saat kursor melayang"
+#: prefs.js:31
+msgid "Lower volume"
+msgstr "Turunkan volume"
 
-#: prefs.js:201
-msgid "Project & License"
-msgstr "Proyek & Lisensi"
+#: prefs.js:32
+msgid "Pause until microphone is free"
+msgstr "Jeda hingga mikrofon bebas"
 
-#: prefs.js:204
-msgid "Extension Version"
-msgstr "Versi Ekstensi"
+#: prefs.js:37
+msgid "Disabled"
+msgstr "Nonaktif"
 
-#: prefs.js:205
-msgid "Version 3.0 (GNOME Shell 50)"
-msgstr "Versi 3.0 (GNOME Shell 50)"
+#: prefs.js:38
+msgid "15 minutes"
+msgstr "15 menit"
 
-#: prefs.js:210
-msgid "License"
-msgstr "Lisensi"
+#: prefs.js:39
+msgid "30 minutes"
+msgstr "30 menit"
 
-#: prefs.js:211
-msgid "GNU General Public License v3.0 (GPL-3.0)"
-msgstr "GNU General Public License v3.0 (GPL-3.0)"
+#: prefs.js:40
+msgid "45 minutes"
+msgstr "45 menit"
 
-#: prefs.js:216
-msgid "Source Code & Contributions"
-msgstr "Kode Sumber & Kontribusi"
+#: prefs.js:41
+msgid "60 minutes"
+msgstr "60 menit"
 
-#: prefs.js:217
-msgid "Open repository on GitHub"
-msgstr "Buka repositori di GitHub"
-
-#: prefs.js:223
-msgid "Privacy & Data"
-msgstr "Privasi & Data"
-
-#: prefs.js:226
-msgid "No Account & No Telemetry"
-msgstr "Tanpa Akun & Tanpa Telemetri"
-
-#: prefs.js:227
-msgid "Zero tracking or listening data sent to external servers."
-msgstr "Nol pelacakan atau data mendengarkan yang dikirim ke server luar."
-
-#: prefs.js:231
-msgid "Listening statistics are stored strictly locally at ~/.local/share/spotify-ext/stats.json."
-msgstr "Statistik mendengarkan disimpan secara lokal di ~/.local/share/spotify-ext/stats.json."
-
-#: prefs.js:255
-msgid "Preview"
-msgstr "Pratinjau"
-
-#: prefs.js:275
+#: prefs.js:340
 msgid "SONORA"
 msgstr "SONORA"
 
-#: prefs.js:277
-msgid "Sonora"
-msgstr "Sonora"
-
-#: prefs.js:278
-msgid "Now-playing panel, synced lyrics, and listening stats, without login."
-msgstr "Panel pemutar, lirik tersinkronisasi, dan statistik dengar, tanpa login."
-
-#: prefs.js:279
-msgid "Music companion for GNOME Shell"
-msgstr "Teman setia musik untuk GNOME Shell"
-
-#: prefs.js:280
+#: prefs.js:344
 msgid "The music companion for GNOME."
 msgstr "Teman setia musik untuk GNOME."
 
-#: src/ui/card/head.js:44 src/ui/indicator.js:125
-msgid "Nothing playing"
-msgstr "Tidak ada yang diputar"
+#: prefs.js:351
+msgid "Now-playing panel, synced lyrics, and listening stats, without login."
+msgstr "Panel pemutar, lirik tersinkronisasi, dan statistik dengar, tanpa login."
+
+#: prefs.js:368
+msgid "Preview"
+msgstr "Pratinjau"
+
+#: prefs.js:409
+msgid "Appearance"
+msgstr "Tampilan"
+
+#: prefs.js:421
+msgid "Panel Indicator"
+msgstr "Indikator Panel"
+
+#: prefs.js:422
+msgid "Display format and position on the top bar."
+msgstr "Format tampilan dan posisi pada bilah atas."
+
+#: prefs.js:427
+msgid "Indicator style"
+msgstr "Gaya indikator"
+
+#: prefs.js:428
+msgid "Compact icon, or full cover with title and status."
+msgstr "Ikon ringkas, atau sampul lengkap dengan judul dan status."
+
+#: prefs.js:434
+msgid "Position"
+msgstr "Posisi"
+
+#: prefs.js:435
+msgid "Where the indicator sits on the top bar."
+msgstr "Posisi indikator pada bilah atas."
+
+#: prefs.js:441
+msgid "Background and Color"
+msgstr "Latar Belakang dan Warna"
+
+#: prefs.js:442
+msgid "Color styling for the now-playing card and panel pill."
+msgstr "Gaya warna untuk kartu pemutar dan pil panel."
+
+#: prefs.js:447
+msgid "Background style"
+msgstr "Gaya latar belakang"
+
+#: prefs.js:448
+msgid "Follow album artwork, or use a solid preset."
+msgstr "Ikuti sampul album, atau gunakan preset solid."
+
+#: prefs.js:464
+msgid "This preset is active when solid background is selected."
+msgstr "Preset ini aktif saat latar belakang solid dipilih."
+
+#: prefs.js:281
+msgid "Midnight"
+msgstr "Tengah Malam"
+
+#: prefs.js:281
+msgid "Graphite"
+msgstr "Grafit"
+
+#: prefs.js:281
+msgid "Navy"
+msgstr "Biru Laut"
+
+#: prefs.js:281
+msgid "Forest"
+msgstr "Hutan"
+
+#: prefs.js:281
+msgid "Plum"
+msgstr "Prem"
+
+#: prefs.js:281
+msgid "Wine"
+msgstr "Anggur"
+
+#: prefs.js:281
+msgid "Ember"
+msgstr "Bara"
+
+#: prefs.js:281
+msgid "Lagoon"
+msgstr "Laguna"
+
+#: prefs.js:477
+msgid "Behavior"
+msgstr "Perilaku"
+
+#: prefs.js:483
+msgid "Card Interaction"
+msgstr "Interaksi Kartu"
+
+#: prefs.js:484
+msgid "How the now-playing popup card is revealed."
+msgstr "Bagaimana kartu sembulan pemutar dimunculkan."
+
+#: prefs.js:489
+msgid "Card activation"
+msgstr "Aktivasi kartu"
+
+#: prefs.js:490
+msgid "When the now-playing card appears."
+msgstr "Kapan kartu pemutar ditampilkan."
+
+#: prefs.js:496
+msgid "Hover delay"
+msgstr "Jeda melayang"
+
+#: prefs.js:497
+msgid "Milliseconds to wait before the card opens on hover"
+msgstr "Milidetik untuk menunggu sebelum kartu terbuka saat kursor melayang"
+
+#: prefs.js:510
+msgid "Lyrics and Timing"
+msgstr "Lirik dan Pewaktu"
+
+#: prefs.js:511
+msgid "Synced lyrics display and playback sleep timer."
+msgstr "Tampilan lirik tersinkronisasi dan pewaktu tidur pemutaran."
+
+#: prefs.js:516
+msgid "Show lyrics"
+msgstr "Tampilkan lirik"
+
+#: prefs.js:517
+msgid "Synced lyrics drawer on the now-playing card"
+msgstr "Laci lirik tersinkronisasi pada kartu pemutar"
+
+#: prefs.js:524
+msgid "Sleep timer"
+msgstr "Pewaktu tidur"
+
+#: prefs.js:525
+msgid "Fade out and pause music after this duration"
+msgstr "Redupkan dan jeda musik setelah durasi ini"
+
+#: prefs.js:531
+msgid "Microphone"
+msgstr "Mikrofon"
+
+#: prefs.js:532
+msgid "Automatic behavior when other applications use the microphone."
+msgstr "Perilaku otomatis saat aplikasi lain menggunakan mikrofon."
+
+#: prefs.js:537
+msgid "When microphone is in use"
+msgstr "Saat mikrofon digunakan"
+
+#: prefs.js:543
+msgid "Ducked volume level"
+msgstr "Tingkat reduksi volume"
+
+#: prefs.js:544
+msgid "Percentage of original playback volume kept"
+msgstr "Persentase volume pemutaran asli yang dipertahankan"
+
+#: prefs.js:555
+msgid "Version %s · GNOME Shell %s"
+msgstr "Versi %s · GNOME Shell %s"
+
+#: prefs.js:558
+msgid "Version %s"
+msgstr "Versi %s"
+
+#: prefs.js:569
+msgid "About"
+msgstr "Tentang"
+
+#: prefs.js:576
+msgid "Sonora"
+msgstr "Sonora"
+
+#: prefs.js:577
+msgid "Music companion for GNOME Shell"
+msgstr "Teman setia musik untuk GNOME Shell"
+
+#: prefs.js:585
+msgid "Extension Version"
+msgstr "Versi Ekstensi"
+
+#: prefs.js:592
+msgid "Developer"
+msgstr "Pengembang"
+
+#: prefs.js:599
+msgid "Extension UUID"
+msgstr "UUID Ekstensi"
+
+#: prefs.js:607
+msgid "Privacy and Data"
+msgstr "Privasi dan Data"
+
+#: prefs.js:608
+msgid "Listening statistics are stored locally at ~/.local/share/spotify-ext/stats.json."
+msgstr "Statistik mendengarkan disimpan secara lokal di ~/.local/share/spotify-ext/stats.json."
+
+#: prefs.js:611
+msgid "No Account, No Telemetry"
+msgstr "Tanpa Akun, Tanpa Telemetri"
+
+#: prefs.js:612
+msgid "Track metadata is sent to lrclib.net only to fetch lyrics. Album art loads from the URL Spotify provides."
+msgstr "Metadata lagu dikirim ke lrclib.net hanya untuk mengambil lirik. Sampul album dimuat dari URL yang disediakan Spotify."
+
+#: prefs.js:619
+msgid "Project and License"
+msgstr "Proyek dan Lisensi"
+
+#: prefs.js:622
+msgid "Source Code and Contributions"
+msgstr "Kode Sumber dan Kontribusi"
+
+#: prefs.js:623
+msgid "Open repository on GitHub"
+msgstr "Buka repositori di GitHub"
+
+#: prefs.js:632
+msgid "Report an Issue"
+msgstr "Laporkan Masalah"
+
+#: prefs.js:633
+msgid "Open a new issue on GitHub"
+msgstr "Buka issue baru di GitHub"
+
+#: prefs.js:642
+msgid "License"
+msgstr "Lisensi"
+
+#: prefs.js:643
+msgid "GNU General Public License v3.0 (GPL-3.0)"
+msgstr "GNU General Public License v3.0 (GPL-3.0)"
+
+#: prefs.js:662
+msgid "Copyright"
+msgstr "Hak Cipta"
+
+#: prefs.js:670
+msgid "Credits"
+msgstr "Kredit"
+
+#: prefs.js:673
+msgid "Lyrics"
+msgstr "Lirik"
+
+#: prefs.js:674
+msgid "Provided by lrclib.net"
+msgstr "Disediakan oleh lrclib.net"
+
+#: prefs.js:683
+msgid "Platform"
+msgstr "Platform"
+
+#: prefs.js:684
+msgid "GNOME Shell and libadwaita"
+msgstr "GNOME Shell dan libadwaita"
+
+#: prefs.js:693
+msgid "Translations"
+msgstr "Terjemahan"
+
+#: prefs.js:694
+msgid "Community translations. Open a pull request on GitHub to add a language."
+msgstr "Terjemahan komunitas. Buka pull request di GitHub untuk menambahkan bahasa."
+
+#: prefs.js:717
+msgid "Troubleshooting"
+msgstr "Pemecahan Masalah"
+
+#: prefs.js:718
+msgid "Include this information when reporting a problem."
+msgstr "Sertakan informasi ini saat melaporkan masalah."
+
+#: prefs.js:721
+msgid "Copy Debug Info"
+msgstr "Salin Info Debug"
+
+#: prefs.js:722
+msgid "Version, session, extension path, and statistics path"
+msgstr "Versi, sesi, lokasi ekstensi, dan lokasi statistik"
+
+#: prefs.js:745
+msgid "Copied to clipboard"
+msgstr "Disalin ke papan klip"
