@@ -2,6 +2,7 @@ import Adw from 'gi://Adw';
 import Cairo from 'gi://cairo';
 import Gdk from 'gi://Gdk?version=4.0';
 import Gio from 'gi://Gio';
+import GLib from 'gi://GLib';
 import Gtk from 'gi://Gtk?version=4.0';
 import Pango from 'gi://Pango';
 import PangoCairo from 'gi://PangoCairo';
@@ -9,6 +10,7 @@ import PangoCairo from 'gi://PangoCairo';
 import {ExtensionPreferences, gettext as _} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 import {getSettings} from './src/core/settings.js';
+import {TRANSLATORS} from './src/util/translators.js';
 import {extensionDir} from './src/util/path.js';
 import {
   BACKGROUND_PRESETS,
@@ -277,13 +279,13 @@ function buildPresetPicker(settings) {
     dot.add_css_class('sonora-swatch-dot');
     dot.add_css_class(`sonora-dot-${preset.id}`);
 
-    const label = new Gtk.Label({label: preset.label, xalign: 0});
+    const label = new Gtk.Label({label: _(preset.label), xalign: 0});
     content.append(dot);
     content.append(label);
 
     const button = new Gtk.ToggleButton({child: content});
     button.add_css_class('sonora-swatch');
-    button.set_tooltip_text(`${preset.label}: ${preset.bg}`);
+    button.set_tooltip_text(`${_(preset.label)}: ${preset.bg}`);
 
     button.connect('toggled', () => {
       if (syncing)
@@ -390,6 +392,10 @@ export default class SonoraPreferences extends ExtensionPreferences {
     this.initTranslations();
     loadCss();
 
+    const display = Gdk.Display.get_default();
+    if (display)
+      Gtk.IconTheme.get_for_display(display).add_search_path(`${extensionDir()}/icons`);
+
     const settings = getSettings();
     const modes = getModes();
     const positions = getPositions();
@@ -432,7 +438,7 @@ export default class SonoraPreferences extends ExtensionPreferences {
     panelGroup.add(position);
 
     const bgGroup = new Adw.PreferencesGroup({
-      title: _('Background & Color'),
+      title: _('Background and Color'),
       description: _('Color styling for the now-playing card and panel pill.'),
     });
     lookPage.add(bgGroup);
@@ -501,7 +507,7 @@ export default class SonoraPreferences extends ExtensionPreferences {
     cardGroup.add(hoverDelay);
 
     const playbackGroup = new Adw.PreferencesGroup({
-      title: _('Lyrics & Timing'),
+      title: _('Lyrics and Timing'),
       description: _('Synced lyrics display and playback sleep timer.'),
     });
     behaviorPage.add(playbackGroup);
@@ -541,6 +547,24 @@ export default class SonoraPreferences extends ExtensionPreferences {
     micGroup.add(duckLevel);
 
     // --- Page 3: About ---
+    const repoUrl = (this.metadata?.url ??
+      'https://github.com/IkrmMrbsy/sonora-gnome-extension').replace(/\/+$/, '');
+    const shellVersions = this.metadata?.['shell-version'] ?? [];
+    const version = this.metadata?.['version-name'] ?? String(this.metadata?.version ?? '?');
+    const versionLabel = shellVersions.length
+      ? _('Version %s · GNOME Shell %s')
+        .replace('%s', version)
+        .replace('%s', shellVersions.join(', '))
+      : _('Version %s').replace('%s', version);
+
+    const openUri = uri => {
+      try {
+        Gio.AppInfo.launch_default_for_uri(uri, null);
+      } catch {
+        // Ignored if no default URI handler
+      }
+    };
+
     const aboutPage = new Adw.PreferencesPage({
       title: _('About'),
       icon_name: 'help-about-symbolic',
@@ -559,50 +583,177 @@ export default class SonoraPreferences extends ExtensionPreferences {
 
     const versionRow = new Adw.ActionRow({
       title: _('Extension Version'),
-      subtitle: _('Version 3.0 (GNOME Shell 50)'),
+      subtitle: versionLabel,
     });
-    addIcon(versionRow, 'application-x-executable-symbolic');
+    addIcon(versionRow, 'info-symbolic');
     appGroup.add(versionRow);
+
+    const developerRow = new Adw.ActionRow({
+      title: _('Developer'),
+      subtitle: 'Ikram Marbasy',
+    });
+    addIcon(developerRow, 'avatar-default-symbolic');
+    appGroup.add(developerRow);
+
+    const uuidRow = new Adw.ActionRow({
+      title: _('Extension UUID'),
+      subtitle: this.uuid ?? this.metadata?.uuid ?? '',
+    });
+    addIcon(uuidRow, 'application-x-addon-symbolic');
+    appGroup.add(uuidRow);
     aboutPage.add(appGroup);
 
     const privacyGroup = new Adw.PreferencesGroup({
-      title: _('Privacy & Data'),
-      description: _('Listening statistics are stored strictly locally at ~/.local/share/spotify-ext/stats.json.'),
+      title: _('Privacy and Data'),
+      description: _('Listening statistics are stored locally at ~/.local/share/spotify-ext/stats.json.'),
     });
     const privacyRow = new Adw.ActionRow({
-      title: _('No Account & No Telemetry'),
-      subtitle: _('Zero tracking or listening data sent to external servers.'),
+      title: _('No Account, No Telemetry'),
+      subtitle: _('Track metadata is sent to lrclib.net only to fetch lyrics. Album art loads from the URL Spotify provides.'),
     });
     addIcon(privacyRow, 'security-high-symbolic');
     privacyGroup.add(privacyRow);
     aboutPage.add(privacyGroup);
 
     const linksGroup = new Adw.PreferencesGroup({
-      title: _('Project & License'),
+      title: _('Project and License'),
     });
     const sourceRow = new Adw.ActionRow({
-      title: _('Source Code & Contributions'),
+      title: _('Source Code and Contributions'),
       subtitle: _('Open repository on GitHub'),
       activatable: true,
     });
-    addIcon(sourceRow, 'software-update-available-symbolic');
-    sourceRow.add_suffix(new Gtk.Image({icon_name: 'go-next-symbolic', pixel_size: 16}));
-    sourceRow.connect('activated', () => {
-      try {
-        Gio.AppInfo.launch_default_for_uri('https://github.com/IkrmMrbsy/sonora-gnome-extension', null);
-      } catch {
-        // Ignored if no default URI handler
-      }
-    });
+    addIcon(sourceRow, 'sonora-github-symbolic');
+    sourceRow.add_suffix(new Gtk.Image({icon_name: 'external-link-symbolic', pixel_size: 16}));
+    sourceRow.connect('activated', () => openUri(repoUrl));
     linksGroup.add(sourceRow);
+
+    const issueRow = new Adw.ActionRow({
+      title: _('Report an Issue'),
+      subtitle: _('Open a new issue on GitHub'),
+      activatable: true,
+    });
+    addIcon(issueRow, 'dialog-warning-symbolic');
+    issueRow.add_suffix(new Gtk.Image({icon_name: 'external-link-symbolic', pixel_size: 16}));
+    issueRow.connect('activated', () => openUri(`${repoUrl}/issues/new`));
+    linksGroup.add(issueRow);
 
     const licenseRow = new Adw.ActionRow({
       title: _('License'),
       subtitle: _('GNU General Public License v3.0 (GPL-3.0)'),
+      activatable: true,
     });
     addIcon(licenseRow, 'emblem-documents-symbolic');
+    licenseRow.add_suffix(new Gtk.Image({icon_name: 'document-open-symbolic', pixel_size: 16}));
+    licenseRow.connect('activated', () => {
+      let uri = 'https://www.gnu.org/licenses/gpl-3.0.html';
+      try {
+        const license = Gio.File.new_for_path(`${extensionDir()}/LICENSE`);
+        if (license.query_exists(null))
+          uri = license.get_uri();
+      } catch {
+        // Fall back to the online license if the local file is unavailable.
+      }
+      openUri(uri);
+    });
     linksGroup.add(licenseRow);
+
+    const copyrightRow = new Adw.ActionRow({
+      title: _('Copyright'),
+      subtitle: '© 2026 Ikram Marbasy',
+    });
+    addIcon(copyrightRow, 'emblem-favorite-symbolic');
+    linksGroup.add(copyrightRow);
     aboutPage.add(linksGroup);
+
+    const creditsGroup = new Adw.PreferencesGroup({
+      title: _('Credits'),
+    });
+    const lyricsCredit = new Adw.ActionRow({
+      title: _('Lyrics'),
+      subtitle: _('Provided by lrclib.net'),
+      activatable: true,
+    });
+    addIcon(lyricsCredit, 'audio-x-generic-symbolic');
+    lyricsCredit.add_suffix(new Gtk.Image({icon_name: 'external-link-symbolic', pixel_size: 16}));
+    lyricsCredit.connect('activated', () => openUri('https://lrclib.net'));
+    creditsGroup.add(lyricsCredit);
+
+    const platformCredit = new Adw.ActionRow({
+      title: _('Platform'),
+      subtitle: _('GNOME Shell and libadwaita'),
+    });
+    addIcon(platformCredit, 'applications-system-symbolic');
+    creditsGroup.add(platformCredit);
+
+    aboutPage.add(creditsGroup);
+
+    if (TRANSLATORS.length) {
+      const translationsGroup = new Adw.PreferencesGroup({
+        title: _('Translations'),
+        description: _('Community translations. Open a pull request on GitHub to add a language.'),
+      });
+      const languageNames = new Intl.DisplayNames(undefined, {type: 'language'});
+      const languageLabel = code => {
+        try {
+          return languageNames.of(code) || code;
+        } catch {
+          return code;
+        }
+      };
+      for (const {code, name} of TRANSLATORS) {
+        const language = languageLabel(code);
+        const title = language.charAt(0).toUpperCase() + language.slice(1);
+        const row = new Adw.ActionRow({
+          title: GLib.markup_escape_text(title, -1),
+          subtitle: GLib.markup_escape_text(name, -1),
+        });
+        translationsGroup.add(row);
+      }
+      aboutPage.add(translationsGroup);
+    }
+
+    const troubleshootGroup = new Adw.PreferencesGroup({
+      title: _('Troubleshooting'),
+      description: _('Include this information when reporting a problem.'),
+    });
+    const debugRow = new Adw.ActionRow({
+      title: _('Copy Debug Info'),
+      subtitle: _('Version, session, extension path, and statistics path'),
+      activatable: true,
+    });
+    addIcon(debugRow, 'edit-copy-symbolic');
+    debugRow.connect('activated', () => {
+      const debugText = [
+        `Sonora ${version}`,
+        `GNOME Shell ${shellVersions.join(', ') || 'unknown'}`,
+        `Session: ${GLib.getenv('XDG_SESSION_TYPE') ?? 'unknown'}`,
+        `Desktop: ${GLib.getenv('XDG_CURRENT_DESKTOP') ?? 'unknown'}`,
+        `UUID: ${this.uuid ?? this.metadata?.uuid ?? 'unknown'}`,
+        `Path: ${extensionDir()}`,
+        `Stats: ${GLib.build_filenamev([GLib.get_user_data_dir(), 'spotify-ext', 'stats.json'])}`,
+      ].join('\n');
+
+      const clipboard = Gdk.Display.get_default()?.get_clipboard();
+      if (clipboard) {
+        const bytes = GLib.Bytes.new(debugText);
+        clipboard.set_content(Gdk.ContentProvider.new_for_bytes(
+          'text/plain;charset=utf-8', bytes));
+      }
+
+      const original = debugRow.subtitle;
+      debugRow.subtitle = _('Copied to clipboard');
+      GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
+        try {
+          debugRow.subtitle = original;
+        } catch {
+          // The window may have been closed before the timeout fired.
+        }
+        return GLib.SOURCE_REMOVE;
+      });
+    });
+    troubleshootGroup.add(debugRow);
+    aboutPage.add(troubleshootGroup);
 
     const syncDuckLevel = () => {
       duckLevel.sensitive = settings.get_string('duck-mode') === 'duck';
