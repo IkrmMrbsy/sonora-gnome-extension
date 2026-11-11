@@ -213,7 +213,7 @@ hero Preferences.
 | Drawer statistik | Tinggi 160 sampai ruang monitor, fallback 360 |
 | Tab drawer | 18 x 56 |
 | Tab statistik | 56 x 18 |
-| Jendela Preferences | 720 x 820 default |
+| Jendela Preferences | 680 x 620 default |
 | Preview Preferences | 300 x 160 |
 
 Aturan:
@@ -418,15 +418,26 @@ tidak hanya disampaikan lewat warna.
 Preferences adalah jendela libadwaita native, bukan surface Shell. Ia mengikuti
 tema terang atau gelap sistem dan memakai token aksen sistem.
 
-- Ukuran default: 720 x 820.
+- Ukuran default: 680 x 620.
 - Hero: satu surface gradient aksen, eyebrow `SONORA`, brand line, dan penjelasan
-  singkat berbahasa Indonesia. Gradient memisahkan brand dari pengaturan dan tidak
+  singkat berbahasa Inggris. Gradient memisahkan brand dari pengaturan dan tidak
   boleh diulang di setiap grup.
 - Preview hero adalah preview panel dan kartu yang representatif, bukan screenshot
   pixel-perfect. Ia diperbarui saat mode latar atau preset berubah. Preview
-  memakai track demo tetap, jadi beri label `Pratinjau` agar tidak terbaca sebagai
+  memakai track demo tetap, jadi beri label `Preview` agar tidak terbaca sebagai
   playback saat ini.
-- Urutan section: `Tampilan`, `Perilaku`, `Mikrofon`, `Tentang`.
+- Urutan halaman: `Appearance`, `Behavior`, `About`. Grup `Microphone` berada di
+  dalam halaman `Behavior`.
+- Halaman `About` memuat identitas, versi dari `metadata.json`, UUID ekstensi,
+  developer, privasi, tautan sumber dan issue, lisensi, copyright, kredit, serta
+  tombol `Copy Debug Info`. Versi tidak boleh di-hardcode. Kredit penerjemah
+  disimpan sebagai kode bahasa ISO dan ditampilkan lewat `Intl.DisplayNames`;
+  nama orang dan nama bahasa tidak diterjemahkan.
+- Klaim privasi harus akurat: statistik hanya disimpan lokal, tetapi metadata lagu
+  dikirim ke `lrclib.net` untuk lirik dan cover dimuat dari URL yang diberikan
+  Spotify.
+- Copy memakai bahasa Inggris ringkas dan dibungkus gettext `_()`, kecuali nama
+  orang, nama bahasa, dan identifier teknis. Terjemahan disediakan lewat `po/`.
 - Pakai `Adw.ComboRow`, `Adw.SpinRow`, `Adw.SwitchRow`, dan `Adw.ActionRow`
   dengan ikon prefix simbolik.
 - Pemilih preset memakai flow toggle swatch empat kolom. Swatch terpilih memakai
@@ -563,6 +574,9 @@ generation", atau "AI powered".
 Jangan memakai karakter tanda pisah panjang di copy UI. Pakai koma, titik, titik
 dua, atau tanda kurung. Ini juga berlaku untuk tooltip dan teks bantuan.
 
+Judul widget Adw memakai markup. Jangan menulis `&` mentah; pakai `and` atau
+escape menjadi `&amp;` agar judul tidak gagal dirender.
+
 ## 10. Aksesibilitas dan ketahanan
 
 - Kontras teks: 4.5:1 untuk teks normal dan 3:1 untuk teks besar, diukur pada
@@ -622,6 +636,8 @@ baru.
 | Tanpa statistik atau testimoni palsu | Produk memakai data listening lokal dan tidak punya social proof untuk dikarang |
 | Motion maksimal 300 ms | Perubahan state harus terasa langsung, bukan sinematik |
 | Tanpa layout mobile | Produk adalah ekstensi desktop shell, jadi panel sempit dan HiDPI adalah batasan nyata |
+| About sebagai page kustom | Konten About lebih lengkap dan terlihat langsung tanpa dialog tambahan; migrasi ke `Adw.AboutDialog` akan mengurangi isi |
+| Versi dibaca dari `metadata.json` | Satu sumber kebenaran, tidak ada versi hardcoded yang bisa basi |
 
 ## 13. Peta implementasi
 
@@ -671,7 +687,6 @@ oleh pekerjaan berikutnya.
 - Kartu belum menyediakan jalur fokus dan aktivasi keyboard yang lengkap.
 - Saat tidak ada lagu, tombol playback masih terlihat dan belum dinonaktifkan
   atau disembunyikan.
-- Preview Preferences memakai track demo tanpa label `Pratinjau`.
 - Lirik belum punya state loading dan error yang terpisah.
 - Daftar statistik belum punya pesan empty eksplisit saat minggu ini tidak punya
   listening.
@@ -679,13 +694,11 @@ oleh pekerjaan berikutnya.
   terutama label lirik, waktu, dan meta pada 30% sampai 40%.
 - Beberapa kontrol ikon saja, termasuk play, previous, next, dan tab drawer,
   belum punya accessible name eksplisit.
-- Accessible name slot sleep menyebut bisa dibatalkan dengan klik, tetapi slot
-  bukan aksi terpisah.
+- Accessible name slot sleep dan duck masih berbahasa Indonesia serta menyebut
+  klik untuk membatalkan, padahal slot bukan aksi terpisah.
 - Aksi double-click cover belum punya petunjuk visual atau aksesibel.
 - Perilaku reduced motion belum dicek di kode.
 - Angka tabular baru diterapkan di slot pill. Waktu kartu dan total statistik
   belum memakai `tnum`.
-- Copy Preferences saat ini mengandung tanda pisah panjang di subtitle hero dan
-  tooltip preset. Ganti saat menyentuh string tersebut.
-- Baris `Tentang` mencampur brand line Inggris dengan kalimat Indonesia dalam
-  satu subtitle. Pisahkan atau samakan bahasanya saat menyentuh baris itu.
+- Beberapa string Shell UI (`Nothing playing`, `Unknown`, accessible name slot)
+  belum dibungkus gettext. Catalog saat ini hanya mencakup `prefs.js`.
