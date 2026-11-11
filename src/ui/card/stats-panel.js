@@ -3,9 +3,21 @@ import GLib from 'gi://GLib';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 
+import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+
 import {ellipsize, formatWeek} from '../widgets.js';
 
-const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+function weekdayLabels() {
+  const formatter = new Intl.DateTimeFormat(undefined, {weekday: 'short'});
+  const monday = new Date(2024, 0, 1);
+  return Array.from({length: 7}, (_, index) => {
+    const date = new Date(monday);
+    date.setDate(monday.getDate() + index);
+    return formatter.format(date);
+  });
+}
+
+const WEEKDAYS = weekdayLabels();
 
 // The statistics drawer that opens below the card: week total, seven weekday
 // bars, and two ranked lists.
@@ -17,9 +29,13 @@ export class StatsPanel {
       height: 0,
       clip_to_allocation: true,
       reactive: true,
+      accessible_name: _('Listening statistics'),
     });
 
-    this._box = new St.BoxLayout({vertical: true, style_class: 'sonora-stats'});
+    this._box = new St.BoxLayout({
+      orientation: Clutter.Orientation.VERTICAL,
+      style_class: 'sonora-stats',
+    });
     this._scroll = new St.ScrollView({
       style_class: 'sonora-stats-scroll',
       hscrollbar_policy: St.PolicyType.NEVER,
@@ -30,9 +46,9 @@ export class StatsPanel {
     });
 
     const head = new St.BoxLayout({style_class: 'sonora-stats-head'});
-    this._title = new St.Label({text: 'STATISTICS', style_class: 'sonora-stats-title'});
+    this._title = new St.Label({text: _('STATISTICS'), style_class: 'sonora-stats-title'});
     this._period = new St.Label({
-      text: 'THIS WEEK',
+      text: _('THIS WEEK'),
       style_class: 'sonora-stats-period',
       x_expand: true,
       x_align: Clutter.ActorAlign.END,
@@ -46,8 +62,14 @@ export class StatsPanel {
 
     this._weekTotal = new St.Label({text: '0m', style_class: 'sonora-week-total'});
 
-    const sparkWrap = new St.BoxLayout({vertical: true, style_class: 'sonora-spark-wrap'});
-    this._spark = new St.BoxLayout({style_class: 'sonora-spark'});
+    const sparkWrap = new St.BoxLayout({
+      orientation: Clutter.Orientation.VERTICAL,
+      style_class: 'sonora-spark-wrap',
+    });
+    this._spark = new St.BoxLayout({
+      style_class: 'sonora-spark',
+      accessible_name: _('Listening time per day'),
+    });
     this._sparkDays = new St.BoxLayout({style_class: 'sonora-spark-days'});
     sparkWrap.add_child(this._spark);
     sparkWrap.add_child(this._sparkDays);
@@ -55,23 +77,33 @@ export class StatsPanel {
     this._grid = new St.BoxLayout({style_class: 'sonora-stats-grid', x_expand: true});
 
     this._artistsCol = new St.BoxLayout({
-      vertical: true, style_class: 'sonora-stats-col', x_expand: true,
+      orientation: Clutter.Orientation.VERTICAL,
+      style_class: 'sonora-stats-col',
+      x_expand: true,
     });
     this._tracksCol = new St.BoxLayout({
-      vertical: true, style_class: 'sonora-stats-col', x_expand: true,
+      orientation: Clutter.Orientation.VERTICAL,
+      style_class: 'sonora-stats-col',
+      x_expand: true,
     });
 
-    this._artistsList = new St.BoxLayout({vertical: true, style_class: 'sonora-stats-list'});
-    this._tracksList = new St.BoxLayout({vertical: true, style_class: 'sonora-stats-list'});
+    this._artistsList = new St.BoxLayout({
+      orientation: Clutter.Orientation.VERTICAL,
+      style_class: 'sonora-stats-list',
+    });
+    this._tracksList = new St.BoxLayout({
+      orientation: Clutter.Orientation.VERTICAL,
+      style_class: 'sonora-stats-list',
+    });
 
     this._artistsCol.add_child(new St.Label({
-      text: 'TOP ARTISTS',
+      text: _('TOP ARTISTS'),
       style_class: 'sonora-stats-coltitle',
     }));
     this._artistsCol.add_child(this._artistsList);
 
     this._tracksCol.add_child(new St.Label({
-      text: 'TOP TRACKS',
+      text: _('TOP TRACKS'),
       style_class: 'sonora-stats-coltitle',
     }));
     this._tracksCol.add_child(this._tracksList);
@@ -166,7 +198,8 @@ export class StatsPanel {
       entry => `${entry.plays}\u00d7`);
 
     const active = stats.activeDays ?? 0;
-    this._activeLabel.clutter_text.set_markup(`<b>${active} of 7</b> days active`);
+    this._activeLabel.clutter_text.set_markup(
+      _('<b>%s of 7</b> days active').format(active));
   }
 
   _renderList(host, entries, formatValue) {

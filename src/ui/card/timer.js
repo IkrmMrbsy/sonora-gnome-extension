@@ -1,6 +1,8 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
+import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+
 import {progressGeometry} from '../geometry.js';
 import {formatClock} from '../widgets.js';
 
@@ -31,6 +33,7 @@ export class CardTimer {
       layout_manager: new Clutter.FixedLayout(),
       x_expand: true,
       height: 14,
+      accessible_name: _('Playback position'),
     });
 
     this._track = new St.Widget({
@@ -138,6 +141,8 @@ export class CardTimer {
     this._knob.set_position(knobX, 2);
     this._cur.text = formatClock(this._position);
     this._dur.text = formatClock(this._duration);
+    this._bar.accessible_name = _('Playback position: %s of %s').format(
+      this._cur.text, this._dur.text);
   }
 
   _seekFromEvent(event) {

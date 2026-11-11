@@ -2,6 +2,7 @@ import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 
+import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 
 import {
@@ -82,6 +83,7 @@ export class NowPlayingCard {
       height: 220,
       reactive: true,
       clip_to_allocation: false,
+      accessible_name: _('Now playing'),
     });
 
     // The card animates its own width/height, so children must follow every
@@ -106,7 +108,10 @@ export class NowPlayingCard {
     });
     this._actor.add_child(this._cols);
 
-    this._left = new St.BoxLayout({vertical: true, style_class: 'sonora-card-box'});
+    this._left = new St.BoxLayout({
+      orientation: Clutter.Orientation.VERTICAL,
+      style_class: 'sonora-card-box',
+    });
     this._left.set_width(LEFT_W);
     this._cols.add_child(this._left);
 
@@ -153,6 +158,7 @@ export class NowPlayingCard {
         icon_size: 12,
         style_class: 'sonora-tab-icon',
       }),
+      accessible_name: _('Show lyrics'),
     });
     this._tabIcon = this._tab.get_child();
     this._tab.set_size(18, 56);
@@ -174,6 +180,7 @@ export class NowPlayingCard {
         icon_size: 12,
         style_class: 'sonora-stab-icon',
       }),
+      accessible_name: _('Show listening stats'),
     });
     this._stabIcon = this._stab.get_child();
     this._stab.set_size(56, 18);
@@ -438,6 +445,10 @@ export class NowPlayingCard {
 
     this._tabIcon.icon_name = this._lyricsOpen ? 'go-previous-symbolic' : 'go-next-symbolic';
     this._stabIcon.icon_name = this._statsOpen ? 'go-up-symbolic' : 'go-down-symbolic';
+    this._tab.accessible_name = this._lyricsOpen ? _('Hide lyrics') : _('Show lyrics');
+    this._stab.accessible_name = this._statsOpen
+      ? _('Hide listening stats')
+      : _('Show listening stats');
 
     if (this._lyricsOpen)
       this._tab.add_style_class_name('active');

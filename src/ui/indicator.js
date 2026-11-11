@@ -3,6 +3,7 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 
+import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
 import * as Main from 'resource:///org/gnome/shell/ui/main.js';
 import * as PanelMenu from 'resource:///org/gnome/shell/ui/panelMenu.js';
 
@@ -70,7 +71,7 @@ export class SonoraIndicator {
     });
 
     this._panelBox = new St.BoxLayout({
-      vertical: false,
+      orientation: Clutter.Orientation.HORIZONTAL,
       y_align: Clutter.ActorAlign.CENTER,
     });
     this._button.add_child(this._panelBox);
@@ -117,12 +118,13 @@ export class SonoraIndicator {
       height: 18,
       y_align: Clutter.ActorAlign.CENTER,
       clip_to_allocation: true,
+      accessible_name: _('Album art'),
     });
 
     this._applyPillHeight();
 
     this._pillTitle = new St.Label({
-      text: 'Nothing playing',
+      text: _('Nothing playing'),
       style_class: 'sonora-title',
       width: PILL_TITLE,
       y_align: Clutter.ActorAlign.CENTER,
@@ -455,7 +457,7 @@ export class SonoraIndicator {
       return;
 
     this._hasTrack = Boolean(track);
-    this._pillTitle.text = track ? (track.title || 'Unknown') : 'Nothing playing';
+    this._pillTitle.text = track ? (track.title || _('Unknown')) : _('Nothing playing');
     this._position = 0;
     this._duration = track?.duration ?? 0;
     this._slotKind = null;
@@ -548,7 +550,7 @@ export class SonoraIndicator {
         text: formatClock(this._sleep)};
 
     if (this._duck)
-      return {kind: 'duck', icon: 'audio-input-microphone-symbolic', text: 'Duck'};
+      return {kind: 'duck', icon: 'audio-input-microphone-symbolic', text: _('Duck')};
 
     const left = Math.max(0, (this._duration || 0) - (this._position || 0));
     return {kind: 'countdown', icon: null, text: `-${formatClock(left)}`};
@@ -561,9 +563,10 @@ export class SonoraIndicator {
     this._pillSlotText.text = text;
     this._pillSlot.visible = this._hasTrack;
     this._pillSlot.accessible_name = kind === 'sleep'
-      ? `Sleep timer ${text}, klik untuk batalkan`
-      : kind === 'duck' ? 'Musik sedang dikecilkan karena mikrofon aktif'
-      : `${text} tersisa`;
+      ? _('Sleep timer %s, click to cancel').format(text)
+      : kind === 'duck'
+        ? _('Music is lowered while the microphone is active')
+        : _('%s remaining').format(text);
     this._syncSlotStyle();
   }
 

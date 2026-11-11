@@ -2,6 +2,8 @@ import Clutter from 'gi://Clutter';
 import Pango from 'gi://Pango';
 import St from 'gi://St';
 
+import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+
 const WINDOW_SIZE = 5;
 const SIDE_PADDING = 16;
 
@@ -22,6 +24,7 @@ export class LyricsPanel {
       clip_to_allocation: true,
       reactive: true,
       y_expand: true,
+      accessible_name: _('Lyrics'),
     });
 
     this._divider = new St.Widget({
@@ -32,14 +35,14 @@ export class LyricsPanel {
     this.actor.add_child(this._divider);
 
     this._inner = new St.BoxLayout({
-      vertical: true,
+      orientation: Clutter.Orientation.VERTICAL,
       style_class: 'sonora-lyrics-inner',
       width,
     });
     this.actor.add_child(this._inner);
 
     this._empty = new St.Label({
-      text: 'No lyrics for this track',
+      text: _('No lyrics for this track'),
       style_class: 'sonora-lyrics-empty',
     });
     this.actor.add_child(this._empty);

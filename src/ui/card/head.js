@@ -1,6 +1,8 @@
 import Clutter from 'gi://Clutter';
 import St from 'gi://St';
 
+import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+
 import {setArtImage} from '../../util/art.js';
 import {ellipsize, iconButton} from '../widgets.js';
 
@@ -10,7 +12,17 @@ const REPEAT_ICON = {
   Playlist: 'media-playlist-repeat-symbolic',
   Track: 'media-playlist-repeat-song-symbolic',
 };
-const REPEAT_LABEL = {None: 'off', Playlist: 'all', Track: 'one'};
+
+function repeatLabel(mode) {
+  switch (mode) {
+  case 'Playlist':
+    return _('Repeat all');
+  case 'Track':
+    return _('Repeat one');
+  default:
+    return _('Repeat off');
+  }
+}
 
 export const COVER_SIZE = 64;
 
@@ -27,6 +39,7 @@ export class CardHead {
       width: COVER_SIZE,
       height: COVER_SIZE,
       reactive: true,
+      accessible_name: _('Album art, double-click to open in Spotify'),
     });
     this._art.connect('button-release-event', (actor, event) => {
       if (event.get_button() === 1 && event.get_click_count() >= 2) {
@@ -37,11 +50,11 @@ export class CardHead {
     });
 
     const info = new St.BoxLayout({
-      vertical: true,
+      orientation: Clutter.Orientation.VERTICAL,
       x_expand: true,
       style_class: 'sonora-info',
     });
-    this._title = new St.Label({text: 'Nothing playing', style_class: 'sonora-song'});
+    this._title = new St.Label({text: _('Nothing playing'), style_class: 'sonora-song'});
     this._artist = new St.Label({text: '', style_class: 'sonora-artist'});
     ellipsize(this._title);
     ellipsize(this._artist);
@@ -54,17 +67,18 @@ export class CardHead {
     });
 
     this._prev = iconButton('sonora-btn', 'media-skip-backward-symbolic',
-      () => this._callbacks.onPrev?.());
+      () => this._callbacks.onPrev?.(), 15, _('Previous track'));
 
     this._play = new St.Button({
       style_class: 'sonora-play',
       child: new St.Icon({icon_name: 'media-playback-start-symbolic', icon_size: 16}),
+      accessible_name: _('Play'),
     });
     this._playIcon = this._play.get_child();
     this._play.connect('clicked', () => this._callbacks.onTogglePlay?.());
 
     this._next = iconButton('sonora-btn', 'media-skip-forward-symbolic',
-      () => this._callbacks.onNext?.());
+      () => this._callbacks.onNext?.(), 15, _('Next track'));
 
     this._repeat = new St.Button({
       style_class: 'sonora-repeat',
@@ -73,6 +87,7 @@ export class CardHead {
         icon_size: 15,
         style_class: 'sonora-repeat-icon',
       }),
+      accessible_name: _('Repeat off'),
     });
     this._repeatIcon = this._repeat.get_child();
     this._repeat.connect('clicked', () => this._cycleRepeat());
@@ -89,12 +104,12 @@ export class CardHead {
 
   setTrack(track) {
     if (!track) {
-      this._title.text = 'Nothing playing';
+      this._title.text = _('Nothing playing');
       this._artist.text = '';
       return;
     }
 
-    this._title.text = track.title || 'Unknown';
+    this._title.text = track.title || _('Unknown');
     this._artist.text = [track.artist, track.album].filter(Boolean).join(' · ');
   }
 
@@ -102,6 +117,7 @@ export class CardHead {
     this._playIcon.icon_name = playing
       ? 'media-playback-pause-symbolic'
       : 'media-playback-start-symbolic';
+    this._play.accessible_name = playing ? _('Pause') : _('Play');
     this._art.set_opacity(playing ? 255 : 150);
   }
 
@@ -133,8 +149,7 @@ export class CardHead {
     if (mode !== 'None')
       this._repeat.add_style_class_name('on');
 
-    const label = `Repeat: ${REPEAT_LABEL[mode]}`;
-    this._repeat.accessible_name = label;
+    this._repeat.accessible_name = repeatLabel(mode);
   }
 
   _cycleRepeat() {

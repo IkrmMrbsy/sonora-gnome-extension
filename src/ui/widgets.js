@@ -20,11 +20,13 @@ export function ellipsize(label) {
   label.clutter_text.line_wrap = false;
 }
 
-export function iconButton(styleClass, iconName, callback, iconSize = 15) {
+export function iconButton(styleClass, iconName, callback, iconSize = 15, accessibleName = '') {
   const button = new St.Button({
     style_class: styleClass,
     child: new St.Icon({icon_name: iconName, icon_size: iconSize}),
   });
+  if (accessibleName)
+    button.accessible_name = accessibleName;
   button.connect('clicked', () => callback());
   return button;
 }

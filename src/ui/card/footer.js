@@ -3,6 +3,8 @@ import Gio from 'gi://Gio';
 import GLib from 'gi://GLib';
 import St from 'gi://St';
 
+import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
+
 import {extensionDir} from '../../util/path.js';
 import {ellipsize, formatWeek} from '../widgets.js';
 
@@ -19,7 +21,7 @@ export class CardFooter {
     });
 
     this._label = new St.Label({
-      text: 'This week 0m',
+      text: '',
       style_class: 'sonora-foot-label',
       x_expand: true,
       y_align: Clutter.ActorAlign.CENTER,
@@ -56,6 +58,8 @@ export class CardFooter {
     this.actor.add_child(this._icon);
     this.actor.add_child(this._label);
     this.actor.add_child(stats);
+
+    this.setStats(null);
   }
 
   setStats(stats) {
@@ -63,8 +67,9 @@ export class CardFooter {
     const top = stats?.topArtist ?? '';
     const week = `<b>${GLib.markup_escape_text(formatWeek(seconds), -1)}</b>`;
     const text = top
-      ? `This week ${week} · top <b>${GLib.markup_escape_text(top, -1)}</b>`
-      : `This week ${week}`;
+      ? _('This week %s · top %s').format(
+        week, `<b>${GLib.markup_escape_text(top, -1)}</b>`)
+      : _('This week %s').format(week);
     this._label.clutter_text.set_markup(text);
 
     const current = stats?.streak ?? 0;
@@ -74,7 +79,7 @@ export class CardFooter {
     this._streakLabel.text = `${current}d`;
     this._bestLabel.visible = best > 0;
     this._bestLabel.clutter_text.set_markup(
-      `best <b>${GLib.markup_escape_text(String(best), -1)}d</b>`);
+      _('best %s').format(`<b>${GLib.markup_escape_text(String(best), -1)}d</b>`));
   }
 
   applyAccent([r, g, b], rgba) {
