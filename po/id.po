@@ -6,8 +6,8 @@ msgid ""
 msgstr ""
 "Project-Id-Version: spotify-ext 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10 18:00+0700\n"
-"PO-Revision-Date: 2026-11-10 18:30+0700\n"
+"POT-Creation-Date: 2026-11-11 14:05+0700\n"
+"PO-Revision-Date: 2026-11-11 14:05+0700\n"
 "Last-Translator: Ikram Marbasy\n"
 "Language-Team: Indonesian <id@li.org>\n"
 "Language: id\n"
@@ -219,7 +219,7 @@ msgstr "Lirik dan Pewaktu"
 msgid "Synced lyrics display and playback sleep timer."
 msgstr "Tampilan lirik tersinkronisasi dan pewaktu tidur pemutaran."
 
-#: prefs.js:516
+#: prefs.js:516 src/ui/card/index.js:161
 msgid "Show lyrics"
 msgstr "Tampilkan lirik"
 
@@ -339,7 +339,7 @@ msgstr "Hak Cipta"
 msgid "Credits"
 msgstr "Kredit"
 
-#: prefs.js:673
+#: prefs.js:673 src/ui/card/lyrics-panel.js:27
 msgid "Lyrics"
 msgstr "Lirik"
 
@@ -382,3 +382,131 @@ msgstr "Versi, sesi, lokasi ekstensi, dan lokasi statistik"
 #: prefs.js:745
 msgid "Copied to clipboard"
 msgstr "Disalin ke papan klip"
+
+#: src/ui/card/head.js:57 src/ui/indicator.js:127
+msgid "Nothing playing"
+msgstr "Tidak ada yang diputar"
+
+#: src/ui/card/head.js:112 src/ui/indicator.js:460
+msgid "Unknown"
+msgstr "Tidak diketahui"
+
+#: src/ui/card/head.js:120
+msgid "Pause"
+msgstr "Jeda"
+
+#: src/ui/card/head.js:120
+msgid "Play"
+msgstr "Putar"
+
+#: src/ui/card/head.js:19
+msgid "Repeat all"
+msgstr "Ulangi semua"
+
+#: src/ui/card/head.js:21
+msgid "Repeat one"
+msgstr "Ulangi satu"
+
+#: src/ui/card/head.js:23 src/ui/card/head.js:90
+msgid "Repeat off"
+msgstr "Ulangan nonaktif"
+
+#: src/ui/card/head.js:42
+msgid "Album art, double-click to open in Spotify"
+msgstr "Sampul album, klik dua kali untuk membuka di Spotify"
+
+#: src/ui/card/head.js:70
+msgid "Previous track"
+msgstr "Lagu sebelumnya"
+
+#: src/ui/card/head.js:81
+msgid "Next track"
+msgstr "Lagu berikutnya"
+
+#: src/ui/card/index.js:183 src/ui/card/index.js:451
+msgid "Show listening stats"
+msgstr "Tampilkan statistik mendengarkan"
+
+#: src/ui/card/index.js:448
+msgid "Hide lyrics"
+msgstr "Sembunyikan lirik"
+
+#: src/ui/card/index.js:450
+msgid "Hide listening stats"
+msgstr "Sembunyikan statistik mendengarkan"
+
+#: src/ui/card/index.js:86
+msgid "Now playing"
+msgstr "Sedang diputar"
+
+#: src/ui/card/lyrics-panel.js:45
+msgid "No lyrics for this track"
+msgstr "Tidak ada lirik untuk lagu ini"
+
+#: src/ui/card/stats-panel.js:100
+msgid "TOP ARTISTS"
+msgstr "ARTIS TERATAS"
+
+#: src/ui/card/stats-panel.js:106
+msgid "TOP TRACKS"
+msgstr "LAGU TERATAS"
+
+#: src/ui/card/stats-panel.js:202
+msgid "<b>%s of 7</b> days active"
+msgstr "<b>%s dari 7</b> hari aktif"
+
+#: src/ui/card/stats-panel.js:32
+msgid "Listening statistics"
+msgstr "Statistik mendengarkan"
+
+#: src/ui/card/stats-panel.js:49
+msgid "STATISTICS"
+msgstr "STATISTIK"
+
+#: src/ui/card/stats-panel.js:51
+msgid "THIS WEEK"
+msgstr "MINGGU INI"
+
+#: src/ui/card/stats-panel.js:71
+msgid "Listening time per day"
+msgstr "Waktu mendengarkan per hari"
+
+#: src/ui/card/timer.js:144
+msgid "Playback position: %s of %s"
+msgstr "Posisi pemutaran: %s dari %s"
+
+#: src/ui/card/timer.js:36
+msgid "Playback position"
+msgstr "Posisi pemutaran"
+
+#: src/ui/indicator.js:121
+msgid "Album art"
+msgstr "Sampul album"
+
+#: src/ui/indicator.js:553
+msgid "Duck"
+msgstr "Redup"
+
+#: src/ui/indicator.js:566
+msgid "Sleep timer %s, click to cancel"
+msgstr "Pewaktu tidur %s, klik untuk membatalkan"
+
+#: src/ui/indicator.js:568
+msgid "Music is lowered while the microphone is active"
+msgstr "Musik diredupkan saat mikrofon aktif"
+
+#: src/ui/indicator.js:569
+msgid "%s remaining"
+msgstr "Tersisa %s"
+
+#: src/ui/card/footer.js:68
+msgid "This week %s · top %s"
+msgstr "Minggu ini %s · teratas %s"
+
+#: src/ui/card/footer.js:70
+msgid "This week %s"
+msgstr "Minggu ini %s"
+
+#: src/ui/card/footer.js:80
+msgid "best %s"
+msgstr "terbaik %s"

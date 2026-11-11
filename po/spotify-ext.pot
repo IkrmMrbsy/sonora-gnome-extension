@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: spotify-ext 1.0.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-10 18:00+0700\n"
+"POT-Creation-Date: 2026-11-11 14:05+0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -220,7 +220,7 @@ msgstr ""
 msgid "Synced lyrics display and playback sleep timer."
 msgstr ""
 
-#: prefs.js:516
+#: prefs.js:516 src/ui/card/index.js:161
 msgid "Show lyrics"
 msgstr ""
 
@@ -340,7 +340,7 @@ msgstr ""
 msgid "Credits"
 msgstr ""
 
-#: prefs.js:673
+#: prefs.js:673 src/ui/card/lyrics-panel.js:27
 msgid "Lyrics"
 msgstr ""
 
@@ -382,4 +382,132 @@ msgstr ""
 
 #: prefs.js:745
 msgid "Copied to clipboard"
+msgstr ""
+
+#: src/ui/card/head.js:57 src/ui/indicator.js:127
+msgid "Nothing playing"
+msgstr ""
+
+#: src/ui/card/head.js:112 src/ui/indicator.js:460
+msgid "Unknown"
+msgstr ""
+
+#: src/ui/card/head.js:120
+msgid "Pause"
+msgstr ""
+
+#: src/ui/card/head.js:120
+msgid "Play"
+msgstr ""
+
+#: src/ui/card/head.js:19
+msgid "Repeat all"
+msgstr ""
+
+#: src/ui/card/head.js:21
+msgid "Repeat one"
+msgstr ""
+
+#: src/ui/card/head.js:23 src/ui/card/head.js:90
+msgid "Repeat off"
+msgstr ""
+
+#: src/ui/card/head.js:42
+msgid "Album art, double-click to open in Spotify"
+msgstr ""
+
+#: src/ui/card/head.js:70
+msgid "Previous track"
+msgstr ""
+
+#: src/ui/card/head.js:81
+msgid "Next track"
+msgstr ""
+
+#: src/ui/card/index.js:183 src/ui/card/index.js:451
+msgid "Show listening stats"
+msgstr ""
+
+#: src/ui/card/index.js:448
+msgid "Hide lyrics"
+msgstr ""
+
+#: src/ui/card/index.js:450
+msgid "Hide listening stats"
+msgstr ""
+
+#: src/ui/card/index.js:86
+msgid "Now playing"
+msgstr ""
+
+#: src/ui/card/lyrics-panel.js:45
+msgid "No lyrics for this track"
+msgstr ""
+
+#: src/ui/card/stats-panel.js:100
+msgid "TOP ARTISTS"
+msgstr ""
+
+#: src/ui/card/stats-panel.js:106
+msgid "TOP TRACKS"
+msgstr ""
+
+#: src/ui/card/stats-panel.js:202
+msgid "<b>%s of 7</b> days active"
+msgstr ""
+
+#: src/ui/card/stats-panel.js:32
+msgid "Listening statistics"
+msgstr ""
+
+#: src/ui/card/stats-panel.js:49
+msgid "STATISTICS"
+msgstr ""
+
+#: src/ui/card/stats-panel.js:51
+msgid "THIS WEEK"
+msgstr ""
+
+#: src/ui/card/stats-panel.js:71
+msgid "Listening time per day"
+msgstr ""
+
+#: src/ui/card/timer.js:144
+msgid "Playback position: %s of %s"
+msgstr ""
+
+#: src/ui/card/timer.js:36
+msgid "Playback position"
+msgstr ""
+
+#: src/ui/indicator.js:121
+msgid "Album art"
+msgstr ""
+
+#: src/ui/indicator.js:553
+msgid "Duck"
+msgstr ""
+
+#: src/ui/indicator.js:566
+msgid "Sleep timer %s, click to cancel"
+msgstr ""
+
+#: src/ui/indicator.js:568
+msgid "Music is lowered while the microphone is active"
+msgstr ""
+
+#: src/ui/indicator.js:569
+msgid "%s remaining"
+msgstr ""
+
+#: src/ui/card/footer.js:68
+msgid "This week %s · top %s"
+msgstr ""
+
+#: src/ui/card/footer.js:70
+msgid "This week %s"
+msgstr ""
+
+#: src/ui/card/footer.js:80
+msgid "best %s"
 msgstr ""
