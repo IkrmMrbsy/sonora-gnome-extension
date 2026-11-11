@@ -2,9 +2,9 @@ name: Security Scan
 
 on:
   push:
-    branches: [ master, main, restructure ]
+    branches: [ main ]
   pull_request:
-    branches: [ master, main, restructure ]
+    branches: [ main ]
   workflow_dispatch:
 
 permissions:

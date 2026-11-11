@@ -1,4 +1,4 @@
-UUID       := spotify-ext@ikram
+UUID       := sonora@ikrmmrbsy.github.io
 NAME       := sonora
 DIST       := dist
 SCHEMA_DIR := schemas
@@ -52,7 +52,7 @@ pack: locales
 	@cp -r $(SOURCES) icons $(SCHEMA_DIR) $(DIST)/$(UUID)/
 	@if [ -d locale ]; then cp -r locale $(DIST)/$(UUID)/; fi
 	@rm -f $(DIST)/$(UUID)/$(SCHEMA_DIR)/gschemas.compiled
-	@cd $(DIST) && zip -qr $(NAME).zip $(UUID)
+	@cd $(DIST)/$(UUID) && zip -qr ../$(NAME).zip .
 	@echo "built $(DIST)/$(NAME).zip"
 
 install: schemas locales

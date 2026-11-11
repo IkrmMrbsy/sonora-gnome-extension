@@ -1,1 +1,13 @@
-{"uuid":"spotify-ext@ikram","name":"Sonora","description":"A feature rich now-playing extension for GNOME Shell, with synced lyrics, playback controls, and listening stats.","shell-version":["50"],"url":"https://github.com/IkrmMrbsy/sonora-gnome-extension","settings-schema":"org.gnome.shell.extensions.spotify-ext","gettext-domain":"spotify-ext","version":1,"version-name":"1.0.0"}
+{
+  "uuid": "sonora@ikrmmrbsy.github.io",
+  "name": "Sonora",
+  "description": "Spotify now-playing companion for GNOME Shell with synced lyrics, playback controls, sleep timer, mic auto-duck, and local listening stats.",
+  "shell-version": [
+    "50"
+  ],
+  "url": "https://github.com/IkrmMrbsy/sonora-gnome-extension",
+  "settings-schema": "org.gnome.shell.extensions.spotify-ext",
+  "gettext-domain": "spotify-ext",
+  "version": 1,
+  "version-name": "1.0.0"
+}
