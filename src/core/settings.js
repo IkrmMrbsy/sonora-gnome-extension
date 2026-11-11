@@ -26,6 +26,10 @@ export function getSettings() {
   return _settings;
 }
 
+export function destroySettings() {
+  _settings = null;
+}
+
 function migrateLegacyConfig(settings) {
   const path = GLib.build_filenamev([GLib.get_user_data_dir(), 'spotify-ext', 'config.json']);
   const file = Gio.File.new_for_path(path);

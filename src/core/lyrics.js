@@ -7,15 +7,6 @@ const API = 'https://lrclib.net/api';
 const CACHE_LIMIT = 40;
 const USER_AGENT = 'sonora/1.0 (GNOME Shell)';
 
-function sleep(ms) {
-  return new Promise(resolve => {
-    GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
-      resolve();
-      return GLib.SOURCE_REMOVE;
-    });
-  });
-}
-
 // Fetches synced lyrics from lrclib.net and keeps a small in-memory cache.
 // Lives in core/ so it can be exercised without a shell.
 export class LyricsClient {
@@ -23,9 +14,14 @@ export class LyricsClient {
     this._cancellable = cancellable;
     this._http = new Soup.Session({timeout: 10});
     this._cache = new Map();
+    this._sleepTimers = new Map();
+    this._destroyed = false;
   }
 
   async fetchFor(track) {
+    if (this._destroyed)
+      return [];
+
     const key = `${track.title}|${track.artist}|${track.album}|${track.duration}`;
 
     const cached = this._cache.get(key);
@@ -81,15 +77,21 @@ export class LyricsClient {
   }
 
   async _getJSON(url, attempt = 0) {
+    if (this._destroyed)
+      throw new Error('LyricsClient destroyed');
+
     const message = Soup.Message.new('GET', url);
     message.request_headers.append('User-Agent', USER_AGENT);
 
     const bytes = await this._send(message);
+    if (this._destroyed)
+      throw new Error('LyricsClient destroyed');
+
     const status = message.get_status();
 
     if (status !== Soup.Status.OK) {
       if (status === Soup.Status.SERVICE_UNAVAILABLE && attempt < 2) {
-        await sleep(1000 + attempt * 1000);
+        await this._sleep(1000 + attempt * 1000);
         return this._getJSON(url, attempt + 1);
       }
 
@@ -99,6 +101,20 @@ export class LyricsClient {
     }
 
     return JSON.parse(new TextDecoder().decode(bytes.get_data()));
+  }
+
+  _sleep(ms) {
+    if (this._destroyed)
+      return Promise.resolve();
+
+    return new Promise(resolve => {
+      const id = GLib.timeout_add(GLib.PRIORITY_DEFAULT, ms, () => {
+        this._sleepTimers.delete(id);
+        resolve();
+        return GLib.SOURCE_REMOVE;
+      });
+      this._sleepTimers.set(id, resolve);
+    });
   }
 
   _send(message) {
@@ -123,6 +139,14 @@ export class LyricsClient {
   }
 
   destroy() {
+    this._destroyed = true;
+
+    for (const [id, resolve] of this._sleepTimers) {
+      GLib.source_remove(id);
+      resolve();
+    }
+    this._sleepTimers.clear();
+
     this._cache.clear();
     this._http.abort();
   }

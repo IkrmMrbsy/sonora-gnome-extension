@@ -9,7 +9,9 @@ import {ArtTracker} from './src/core/art.js';
 import {averageColor} from './src/util/color.js';
 import {SonoraIndicator} from './src/ui/indicator.js';
 import {pixbufToRGBA} from './src/util/art.js';
-import {configNeedsRelayout, getSettings, loadConfig, watchConfig} from './src/core/settings.js';
+import {
+  configNeedsRelayout, destroySettings, getSettings, loadConfig, watchConfig,
+} from './src/core/settings.js';
 import {activeLine} from './src/core/lrc.js';
 import {LyricsClient} from './src/core/lyrics.js';
 import {PlaybackTracker} from './src/core/playback.js';
@@ -49,18 +51,30 @@ function saveStats(stats) {
     const dir = file.get_parent();
     if (!dir.query_exists(null))
       dir.make_directory_with_parents(null);
-    const [ok] = file.replace_contents(
-      new TextEncoder().encode(JSON.stringify(stats)),
-      null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null);
-    return ok;
+
+    return new Promise(resolve => {
+      file.replace_contents_async(
+        new TextEncoder().encode(JSON.stringify(stats)),
+        null, false, Gio.FileCreateFlags.REPLACE_DESTINATION, null,
+        (source, result) => {
+          try {
+            const [ok] = source.replace_contents_finish(result);
+            resolve(ok);
+          } catch (error) {
+            console.error(`spotify-ext: failed to save stats: ${error}`);
+            resolve(false);
+          }
+        });
+    });
   } catch (error) {
     console.error(`spotify-ext: failed to save stats: ${error}`);
-    return false;
+    return Promise.resolve(false);
   }
 }
 
 export default class SpotifyLyricsExtension extends Extension {
   enable() {
+    this.initTranslations();
     this._config = loadConfig();
     this._settings = getSettings();
     this._spotify = new Spotify();
@@ -68,6 +82,7 @@ export default class SpotifyLyricsExtension extends Extension {
     const loaded = loadStats();
     this._stats = loaded.stats;
     this._statsDirty = loaded.dirty;
+    this._statsRevision = 0;
     this._pruneDay = dayKey(new Date());
     this._destroyed = false;
 
@@ -162,11 +177,15 @@ export default class SpotifyLyricsExtension extends Extension {
     this._mic?.destroy();
     this._mic = null;
 
+    this._settings = null;
+    destroySettings();
+
     this._volume.destroy();
     this._cancellable.cancel();
     this._http.abort();
     this._lyricsToken?.invalidate();
     this._art?.clear();
+    this._art = null;
 
     // Null the reference before destroying so a queued timer callback that
     // still fires cannot touch disposed actors.
@@ -392,6 +411,7 @@ export default class SpotifyLyricsExtension extends Extension {
     const now = GLib.get_monotonic_time() / 1e6;
     const {seconds, counted} = this._playback.update(track, position, now, true);
     const date = new Date();
+    let changed = false;
 
     if (seconds > 0) {
       addListen(this._stats, {
@@ -401,13 +421,18 @@ export default class SpotifyLyricsExtension extends Extension {
         day: dayKey(date),
       });
       this._statsDirty = true;
+      changed = true;
     }
 
     if (counted) {
       addPlay(this._stats, {artist: track.artist, title: track.title, day: dayKey(date)});
       this._statsDirty = true;
+      changed = true;
       this._updateCardStats();
     }
+
+    if (changed)
+      this._statsRevision++;
   }
 
   _saveStats() {
@@ -417,15 +442,20 @@ export default class SpotifyLyricsExtension extends Extension {
     const today = dayKey(new Date());
     if (today !== this._pruneDay) {
       this._pruneDay = today;
-      if (pruneStats(this._stats))
+      if (pruneStats(this._stats)) {
         this._statsDirty = true;
+        this._statsRevision++;
+      }
     }
 
     if (!this._statsDirty)
       return;
 
-    if (saveStats(this._stats))
-      this._statsDirty = false;
+    const revision = this._statsRevision;
+    saveStats(this._stats).then(ok => {
+      if (ok && revision === this._statsRevision)
+        this._statsDirty = false;
+    });
   }
 
   _updateCardStats() {
@@ -455,20 +485,20 @@ export default class SpotifyLyricsExtension extends Extension {
   }
 
   _clearArt() {
-    this._art.clear();
+    this._art?.clear();
     this._indicator?.setArt(null);
   }
 
   async _loadArt(track) {
     const url = track.artUrl;
     if (!url) {
-      if (this._art.hasState())
+      if (this._art?.hasState())
         this._clearArt();
       return;
     }
 
     const now = GLib.get_monotonic_time() / 1e6;
-    const started = this._art.begin(url, now);
+    const started = this._art?.begin(url, now);
     if (!started)
       return;
 
@@ -476,6 +506,9 @@ export default class SpotifyLyricsExtension extends Extension {
       this._indicator?.setArt(null);
 
     const pixbuf = await this._fetchPixbuf(url);
+    if (this._destroyed || !this._art)
+      return;
+
     const result = this._art.finish(started.token, url, Boolean(pixbuf),
       GLib.get_monotonic_time() / 1e6);
     if (result === null)
@@ -509,7 +542,23 @@ export default class SpotifyLyricsExtension extends Extension {
     });
   }
 
+  _decodePixbuf(stream) {
+    return new Promise((resolve, reject) => {
+      GdkPixbuf.Pixbuf.new_from_stream_async(stream, this._cancellable,
+        (source, result) => {
+          try {
+            resolve(GdkPixbuf.Pixbuf.new_from_stream_finish(result));
+          } catch (error) {
+            reject(error);
+          }
+        });
+    });
+  }
+
   async _fetchPixbuf(url) {
+    if (this._destroyed || !this._pixbufs)
+      return null;
+
     const cached = this._pixbufs.get(url);
     if (cached)
       return cached;
@@ -517,8 +566,14 @@ export default class SpotifyLyricsExtension extends Extension {
     try {
       const message = Soup.Message.new('GET', url);
       const bytes = await this._send(message);
+      if (this._destroyed || !this._pixbufs)
+        return null;
+
       const stream = Gio.MemoryInputStream.new_from_bytes(bytes);
-      const pixbuf = GdkPixbuf.Pixbuf.new_from_stream(stream, null);
+      const pixbuf = await this._decodePixbuf(stream);
+      if (this._destroyed || !this._pixbufs)
+        return null;
+
       this._pixbufs.set(url, pixbuf);
       if (this._pixbufs.size > 8)
         this._pixbufs.delete(this._pixbufs.keys().next().value);
@@ -531,7 +586,7 @@ export default class SpotifyLyricsExtension extends Extension {
   async _load(track) {
     const token = this._lyricsToken.next();
     const lines = await this._lyricsClient.fetchFor(track);
-    if (!this._lyricsToken.isCurrent(token))
+    if (this._destroyed || !this._lyricsToken.isCurrent(token))
       return;
 
     this._lines = lines;

@@ -51,16 +51,7 @@ export class Spotify {
   }
 
   status() {
-    const proxy = this._proxyOrNull();
-    if (!proxy)
-      return null;
-
-    try {
-      return proxy.get_cached_property('PlaybackStatus')?.unpack() ?? null;
-    } catch {
-      this._proxy = null;
-      return null;
-    }
+    return this._cachedProperty('PlaybackStatus');
   }
 
   track() {
@@ -88,11 +79,11 @@ export class Spotify {
   }
 
   volume() {
-    return this._getProperty('Volume');
+    return this._cachedProperty('Volume');
   }
 
   loopStatus() {
-    return this._getProperty('LoopStatus');
+    return this._cachedProperty('LoopStatus');
   }
 
   setLoopStatus(value) {
@@ -125,6 +116,19 @@ export class Spotify {
     if (!trackId || !String(trackId).startsWith('/'))
       return false;
     return this._callArgs('SetPosition', new GLib.Variant('(ox)', [trackId, usec]));
+  }
+
+  _cachedProperty(name) {
+    const proxy = this._proxyOrNull();
+    if (!proxy)
+      return null;
+
+    try {
+      return proxy.get_cached_property(name)?.unpack() ?? null;
+    } catch {
+      this._proxy = null;
+      return null;
+    }
   }
 
   _getProperty(name) {
