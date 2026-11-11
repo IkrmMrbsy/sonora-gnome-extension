@@ -1,332 +1,169 @@
-# Sonora
+**English** | [Bahasa Indonesia](README.id.md)
+
+# Sonora: Spotify Now-Playing & Synced Lyrics for GNOME Shell 50
 
 **The music companion for GNOME.**
 
-Ekstensi GNOME Shell 50 yang menampilkan lagu Spotify yang sedang diputar langsung di panel atas, dengan lirik tersinkron, kontrol pemutaran, dan statistik mendengarkan.
+Sonora is a GNOME Shell 50 extension that displays your currently playing Spotify track directly on the top bar, featuring an adaptive now-playing card, synced lyrics, playback controls, a sleep timer, microphone auto-ducking, and local listening statistics.
 
-Tidak memakai Web API Spotify dan tidak butuh login. Semua data diambil dari **MPRIS** (`org.mpris.MediaPlayer2.spotify`) di D-Bus session, jadi apa pun yang sedang diputar Spotify akan terbaca — termasuk kontrol play/pause/next/previous/seek lewat D-Bus.
-
----
-
-## Kebutuhan
-
-- GNOME Shell **50**
-- Spotify (versi desktop, yang mengekspos MPRIS)
-- Koneksi internet hanya untuk mengambil lirik dan album art
-- Opsional: `Gvc` (biasanya sudah ada di GNOME) untuk fitur ducking mikrofon
+No Spotify Web API keys and no account login required. All playback state and metadata are read locally via **MPRIS** (`org.mpris.MediaPlayer2.spotify`) on the D-Bus session bus, including full `Play`, `Pause`, `Next`, `Previous`, `Seek`, and `LoopStatus` controls.
 
 ---
 
-## Instalasi
+## Key Features
 
-Cara tercepat:
+- **Top Bar Indicator (`Icon` or `Pill` mode)**: Choose between a compact music icon or an adaptive pill showing album cover art, track title, and a contextual right slot (remaining time countdown, active sleep timer, or microphone duck indicator).
+- **Now-Playing Card**: Opens on hover or click with album art accent tinting (or a chosen solid color preset), interactive seek bar, and full MPRIS playback + repeat controls. Double-click the cover art to focus Spotify.
+- **Synced Lyrics (`lrclib.net`)**: Expandable lyrics drawer with LRC timestamp parsing, smooth monotonic-clock line progression, and a 40-track in-memory cache.
+- **Sleep Timer**: Fade out playback volume over 5 seconds and pause automatically after 15, 30, 45, or 60 minutes, then restore the original volume.
+- **Microphone Auto-Duck / Auto-Pause**: Uses GNOME Volume Control (`Gvc`) to detect active microphone input (such as video calls) and automatically lower volume or pause Spotify until the microphone is free again.
+- **Local Listening Statistics & Streaks**: Tracks listening time, weekly totals, top 5 artists, top 5 tracks, and daily streaks locally at `~/.local/share/spotify-ext/stats.json` with zero telemetry.
+- **Libadwaita Preferences & i18n**: Clean 3-page GTK4/Libadwaita preferences window (**Appearance**, **Behavior**, **About**) with live Cairo preview and GNU gettext translation support.
 
-```
+---
+
+## Requirements
+
+- **GNOME Shell 50**
+- **Spotify** desktop client exposing MPRIS (`org.mpris.MediaPlayer2.spotify`)
+- **Internet access** only for fetching album art (`mpris:artUrl`) and synced lyrics (`lrclib.net`)
+- Optional: `Gvc` (typically bundled with GNOME Shell) for microphone detection
+
+---
+
+## Installation
+
+### From source (recommended for development)
+
+```bash
 make install
 ```
 
-Perintah itu mengompilasi skema, lalu membuat symlink ke folder ekstensi. Setelahnya logout dan login sekali, kemudian aktifkan:
+This compiles the GSettings schema and gettext translations (`make schemas locales`), then symlinks the extension directory into `~/.local/share/gnome-shell/extensions/sonora@ikrmmrbsy.github.io`.
 
-```
-gnome-extensions enable spotify-ext@ikram
-```
+On Wayland, log out and back in once so GNOME Shell discovers the new extension metadata, then enable it:
 
-Kalau lebih suka manual:
-
-1. Symlink folder ini ke folder ekstensi:
-   ```
-   ln -s "$PWD" ~/.local/share/gnome-shell/extensions/spotify-ext@ikram
-   ```
-2. Kompilasi skema (wajib, folder `schemas/` dibaca langsung oleh Shell):
-   ```
-   make schemas
-   ```
-3. Logout lalu login sekali. Di Wayland, GNOME Shell tidak bisa di-restart di tempat, dan metadata ekstensi di-cache saat startup — tanpa logout, halaman preferensi bisa belum terdeteksi.
-4. Aktifkan:
-   ```
-   gnome-extensions enable spotify-ext@ikram
-   ```
-
-Buka pengaturan lewat **Settings → Extensions → (ekstensi ini) → ikon gerigi**, atau:
-```
-gnome-extensions prefs spotify-ext@ikram
+```bash
+gnome-extensions enable sonora@ikrmmrbsy.github.io
 ```
 
-Untuk melepas symlink: `make uninstall`.
+Open preferences via **Extensions -> Sonora -> Settings**, or run:
+
+```bash
+gnome-extensions prefs sonora@ikrmmrbsy.github.io
+```
+
+To remove the symlink:
+
+```bash
+make uninstall
+```
 
 ---
 
-## Tampilan
+## Panel Indicator & Now-Playing Card
 
-Indikator punya dua mode, diatur dari preferensi:
-
-| Mode | Isi panel | Ukuran |
+| Mode | Top Bar Contents | Size |
 |---|---|---|
-| **Ikon saja** | ikon nada | area sentuh 28×24 |
-| **Cover + judul + status** | album art, judul lagu, dan satu slot info di kanan | 240×tinggi penuh panel |
+| **Icon only** | Music glyph | 28x24 hit area |
+| **Cover, title and status** | Album art, track title, contextual slot | 240px wide (shrinks down to 170px if needed) |
 
-Pada mode pill, tingginya mengikuti tinggi panel sehingga tidak menyisakan celah atas-bawah. Posisi bisa **kiri**, **tengah**, atau **kanan**. Kalau ruang panel tidak cukup, lebar pill menyusut otomatis (minimum 170px).
+The contextual right slot shows one status at a time with a 120ms cross-fade when state changes:
+1. **Remaining time** (default), e.g. `-3:10`
+2. **Sleep timer**, moon icon + remaining countdown when armed
+3. **Mic ducking**, microphone icon + `Duck` while volume is lowered
 
-Latar pill diberi tint warna album art: pekat di tepi kiri (di belakang cover), memudar sampai sekitar 55% lebar, sisanya gelap. Tint digambar sendiri dengan Cairo dan dipotong mengikuti sudut membulat.
-
----
-
-## Slot kanan: hitung mundur, sleep, atau duck
-
-Slot di kanan pill bukan chip statistik. Isinya kontekstual, satu informasi per waktu:
-
-1. **Hitung mundur sisa lagu** (default) — misalnya `-3:10`, tipografinya sama dengan judul (11px, 700).
-2. **Sleep timer**: ikon bulan + sisa waktu, muncul hanya saat timer aktif. Timer dihentikan dari preferensi dengan memilih `Nonaktif`.
-3. **Duck mikrofon** — ikon mikrofon + `Duck`, muncul hanya saat musik sedang dikecilkan.
-
-Perpindahan antar isi memakai cross-fade 120ms, dan hanya terjadi saat *makna* slot berubah — bukan setiap detik. Saat lagu dijeda, slot, judul, dan cover meredup.
+Inside the card, two optional drawers expand independently without shifting the main card controls:
+- **Lyrics drawer** (expands right): 5 lines centered on the active lyric line
+- **Stats drawer** (expands down): weekly listening total, 7-day bar chart, top 5 artists by time, top 5 tracks by play count, and active day streaks
 
 ---
 
-## Kartu (hover / klik)
+## Listening Statistics & Privacy
 
-Arahkan kursor ke indikator (400ms) atau klik untuk membuka kartu. Tutup dengan menggerakkan kursor keluar (320ms), `Esc`, atau klik di luar.
-
-Isi kartu:
-
-- **Album art 64px** dengan sudut membulat. Klik dua kali untuk membuka Spotify.
-- **Judul + artis · album**, dipotong dengan elipsis bila panjang.
-- **Kontrol** previous / play-pause / next / repeat. Repeat bersiklus mati → semua lagu → satu lagu, dan ditulis ke pemutar lewat `LoopStatus` sehingga tetap tersimpan di Spotify.
-- **Baris waktu** `1:23 ──────── 3:20`. Garisnya bisa diklik atau di-drag untuk lompat.
-- **Footer** satu baris: `This week 3h 12m · top Nama Artis`, lalu di kanan `🔥 5d` (streak berjalan) dan `best 12d` (streak terpanjang).
-
-### Dua laci yang bisa dibuka
-
-Kartu punya dua sisi yang bisa dibuka tanpa menggeser isi utamanya:
-
-| Laci | Arah | Isi |
-|---|---|---|
-| **Lirik** | melebar ke kanan | 5 baris lirik di sekitar baris aktif |
-| **Statistik** | melebar ke bawah | total minggu ini, 7 batang hari, top 5 artis (waktu), top 5 lagu (jumlah putar), hari aktif |
-
-Keduanya berperilaku sama: **klik untuk membuka**, klik lagi atau `Esc` untuk menutup. Tidak ada pratinjau saat kursor lewat — laci hanya terbuka kalau memang diminta, jadi tidak ada panel yang tiba-tiba melebar saat kursor melintas.
-
-Membuka salah satu tidak mengubah ukuran yang lain; membuka keduanya membuat laci statistik melebar mengikuti lebar kartu, sehingga tidak ada ruang kosong di sisi kanan.
-
-Saat laci terbuka, `Esc` menutup laci dulu; `Esc` sekali lagi menutup kartu.
-
-Kartu bisa muncul di mode ikon maupun mode pill, diposisikan mengikuti indikator dengan panah kecil yang menunjuk ke arahnya, dan dijepit agar tidak keluar dari monitor.
-
-Warna aksen (border kartu, glow, ikon footer, isi chip state) diambil dari rata-rata warna album art, dengan piksel jenuh warna diprioritaskan supaya hasilnya tidak keruh.
+- **Zero accounts, zero telemetry**: Nothing is ever sent to the extension author or third-party analytics.
+- **Local storage**: Stats live at `~/.local/share/spotify-ext/stats.json` and flush at most once every 5 minutes.
+- **Retention**: Daily artist and track breakdowns are kept for 10 days; total daily listening seconds and play counts are kept long-term.
+- **Network requests**: Only track metadata (`title`, `artist`, `album`, `duration`) is sent to `lrclib.net` for lyrics lookup, and cover images load from Spotify's `mpris:artUrl`.
 
 ---
 
-## Lirik
+## Translations (i18n)
 
-- Sumber: [lrclib.net](https://lrclib.net), endpoint `/get` lalu fallback ke `/search` bila tidak ketemu persis.
-- Format LRC diparse, termasuk baris dengan banyak timestamp dan pecahan milidetik.
-- Posisi lagu diproyeksikan dari jam monotonik, jadi lirik tetap halus di antara pembaruan MPRIS.
-- Cache 40 lagu terakhir (in-memory) supaya lagu yang diulang tidak memanggil API lagi.
-- Bisa dimatikan dari preferensi; kartu otomatis mengecil saat lirik disembunyikan.
+Sonora uses standard GNU gettext (`gettext-domain: spotify-ext`) with English as the base language.
 
----
-
-## Sleep timer
-
-Durasi dipilih dari preferensi (nonaktif / 15 / 30 / 45 / 60 menit). Saat waktunya habis:
-
-1. Volume diturunkan bertahap sampai 0 selama 5 detik.
-2. Pemutaran dijeda.
-3. Volume dikembalikan ke nilai semula.
-
-Sisa waktu tampil sebagai hitung mundur di slot pill. Timer dihentikan dari preferensi dengan memilih `Nonaktif`. Nilai timer tersimpan sebagai setting, jadi ikut ter-reset ke nol setelah timer selesai.
+To add a new language (for example Spanish `es`):
+1. Copy `po/spotify-ext.pot` to `po/es.po`.
+2. Fill in each `msgstr` translation.
+3. Add your credit entry in `src/util/translators.js`.
+4. Run `make locales` to verify compilation into `locale/es/LC_MESSAGES/spotify-ext.mo`.
+5. Open a Pull Request on GitHub.
 
 ---
 
-## Mikrofon
+## Development Commands
 
-Tiga pilihan perilaku saat ada aplikasi lain memakai mikrofon:
+All tasks are managed through `Makefile`:
 
-| Mode | Perilaku |
+| Command | Purpose |
 |---|---|
-| **Jangan ganggu** | tidak melakukan apa pun |
-| **Kecilkan volume** | volume diturunkan bertahap (400ms) ke persentase pilihan (10%–70%), lalu dipulihkan (600ms) saat mikrofon bebas |
-| **Jeda sampai mikrofon selesai** | pemutaran dijeda, lalu dilanjutkan otomatis setelah mikrofon bebas |
+| `make` | Run `lint`, `test`, `schemas`, and `locales` |
+| `make schemas` | Compile `schemas/gschemas.compiled` |
+| `make locales` | Compile `po/*.po` translations into `locale/*/LC_MESSAGES/spotify-ext.mo` |
+| `make lint` | Syntax-check all JavaScript files |
+| `make test` | Run all 12 isolated GJS unit test suites in `tests/` |
+| `make security` | Run Gitleaks secret scan and Semgrep SAST |
+| `make install` | Symlink extension and compile schemas & locales |
+| `make uninstall` | Remove extension symlink |
+| `make pack` | Build release archive `dist/sonora.zip` |
+| `make headless` | Launch headless GNOME Shell 50 with `dev/fake-spotify.js` |
+| `make clean` | Remove build artifacts (`dist/`, `locale/`, compiled schemas) |
 
-Mode jeda hanya melanjutkan pemutaran kalau ekstensi yang menjedakannya — kalau musik memang sudah dijeda sebelumnya, musik tidak akan tiba-tiba berputar setelah rapat selesai.
+### Project Structure
 
-Deteksi memakai `Gvc` (daftar source output). Kalau `Gvc` tidak tersedia, fitur ini mati diam-diam tanpa mengganggu fitur lain.
-
----
-
-## Statistik mendengarkan
-
-Disimpan lokal di `~/.local/share/spotify-ext/stats.json` dan ditulis maksimal setiap 5 menit. Detail artis/lagu hanya disimpan 10 hari; agregat detik dan jumlah putar per hari disimpan seterusnya.
-
-Yang dicatat:
-
-- total detik per hari
-- detik per artis dan per lagu, per hari (detail 10 hari terakhir)
-- jumlah putar per lagu, per hari (detail 10 hari terakhir)
-
-Yang ditampilkan di kartu:
-
-- total waktu minggu ini
-- artis teratas minggu ini
-- streak hari berturut-turut saat ini
-- streak terpanjang sepanjang riwayat
-
-Definisi "satu putaran" memakai posisi lagu: sebuah lagu dihitung setelah posisi melewati ambang `min(30 detik, 50% durasi)`. Putar ulang dan seek mundur ke awal akan mengaktifkan ulang hitungan. Iklan (artis kosong) tetap menambah total waktu tapi tidak diatribusikan ke artis mana pun.
-
----
-
-## Preferensi
-
-| Setting | Nilai | Keterangan |
-|---|---|---|
-| Indikator panel | Ikon saja / Cover + judul + status | berlaku langsung |
-| Posisi | Kiri / Tengah / Kanan | berlaku langsung |
-| Kartu terbuka | Saat kursor diarahkan / Hanya saat diklik / Keduanya | mode klik menutup kartu saat diklik ulang |
-| Jeda sebelum terbuka | 0–2000 ms | hanya berlaku untuk mode kursor |
-| Tampilkan lirik | on / off | tombol lirik di kartu ikut disembunyikan |
-| Sleep timer | Nonaktif / 15 / 30 / 45 / 60 menit | langsung meng-arm timer |
-| Saat mikrofon dipakai | Jangan ganggu / Kecilkan volume / Jeda sampai mikrofon selesai | — |
-| Volume saat dikecilkan | 10%–70% | aktif hanya pada mode "Kecilkan volume" |
-
-Setting disimpan lewat GSettings (skema `org.gnome.shell.extensions.spotify-ext`), sehingga bisa diubah dari preferensi, `gsettings`, atau `dconf`. Kalau ada file `config.json` lama dari versi sebelumnya, isinya dimigrasikan otomatis sekali saat pertama dijalankan.
-
----
-
-## Struktur berkas
-
-```
+```text
 sonora/
-├── .github/
-│   └── workflows/
-│       └── security.yml       # secret scan + SAST
-├── .editorconfig
-├── .gitignore
-├── .gitleaks.toml             # aturan Gitleaks
-├── .semgrepignore
-├── DESIGN.md                  # panduan desain
+├── .github/workflows/         # CI (lint, test, pack) & security scans
+├── AGENTS.md                  # Architecture & publication rules
+├── DESIGN.md                  # Visual & interaction design specification
 ├── LICENSE                    # GPL-3.0
 ├── Makefile
-├── README.md
-├── metadata.json              # wajib di root (dibaca Shell saat startup)
-├── extension.js               # wajib di root, entry point
-├── prefs.js                   # wajib di root, halaman preferensi
-├── stylesheet.css             # wajib di root, satu-satunya CSS yang dimuat
-├── schemas/                   # skema GSettings
-│
+├── README.md                  # English documentation (default)
+├── README.id.md               # Indonesian documentation
+├── metadata.json              # GNOME Shell extension manifest
+├── extension.js               # Extension entry point
+├── prefs.js                   # GTK4 / Libadwaita preferences window
+├── stylesheet.css             # GNOME Shell styling
+├── po/                        # Gettext .pot template and .po translations
+├── schemas/                   # GSettings XML schema
 ├── src/
-│   ├── core/                  # logika, tanpa St/Clutter
-│   │   ├── player.js          # pembungkus D-Bus MPRIS
-│   │   ├── lyrics.js          # client lrclib + cache
-│   │   ├── lrc.js             # parser LRC
-│   │   ├── stats.js           # model statistik + agregasi mingguan
-│   │   ├── playback.js        # hitungan putar berbasis posisi
-│   │   ├── art.js             # state fetch/cache/retry album art
-│   │   ├── token.js           # token pembatalan request async
-│   │   ├── settings.js        # GSettings + migrasi config lama
-│   │   ├── volume.js          # fade, duck, pause-for-mic
-│   │   └── mic.js             # deteksi mikrofon (Gvc)
-│   │
-│   ├── ui/
-│   │   ├── indicator.js       # indikator panel (ikon/pill)
-│   │   ├── geometry.js        # helper geometri kartu dan progress
-│   │   ├── widgets.js         # format waktu, ellipsize, tombol ikon
-│   │   ├── paint.js           # tint radial, panah, clip membulat
-│   │   └── card/
-│   │       ├── index.js       # orkestrasi kartu, layout, event
-│   │       ├── head.js        # cover, judul, kontrol, repeat
-│   │       ├── timer.js       # durasi + progress yang bisa digeser
-│   │       ├── footer.js      # this week + streak
-│   │       ├── lyrics-panel.js
-│   │       └── stats-panel.js
-│   │
-│   └── util/
-│       ├── art.js             # pixbuf → RGBA, pemasangan album art
-│       ├── color.js           # warna aksen dari album art
-│       ├── palette.js         # preset warna kartu dan pill
-│       └── path.js            # resolusi folder ekstensi
-│
-├── tests/                     # tes unit, satu runner
-├── dev/                       # pemutar MPRIS palsu + skrip headless shell
-├── icons/                     # ikon tambahan (api, bulan)
-└── docs/                      # AUDIT.md, IDEAS.md, ROADMAP.md, STRUCTURE.md, mockup/
-```
-
-Alasan pemecahan ini, termasuk batasan yang tidak bisa dilanggar GNOME Shell, ada di [`docs/STRUCTURE.md`](docs/STRUCTURE.md).
-
-Prinsipnya: `src/core/` bebas dari `St`/`Clutter` sehingga bisa diuji tanpa menjalankan Shell, sedangkan `src/ui/` boleh bergantung penuh pada Shell.
-
----
-
-## Perintah
-
-Semua perintah pengembangan lewat `Makefile`:
-
-| Perintah | Kegunaan |
-|---|---|
-| `make` | `lint` + `test` + `schemas` sekaligus |
-| `make schemas` | Kompilasi `schemas/gschemas.compiled` (wajib sebelum jalan pertama kali) |
-| `make lint` | Periksa sintaks semua berkas JavaScript |
-| `make test` | Jalankan semua tes di `tests/` |
-| `make security` | Secret scan dengan Gitleaks dan SAST dengan Semgrep |
-| `make install` | Symlink ke folder ekstensi + kompilasi skema |
-| `make uninstall` | Hapus symlink |
-| `make pack` | Buat `dist/sonora.zip` untuk rilis |
-| `make headless` | Jalankan shell headless dengan pemutar palsu |
-| `make clean` | Hapus artefak build |
-| `make help` | Daftar perintah |
-
-`make security` membutuhkan `gitleaks` dan `semgrep` di `PATH`. CI menjalankan pemeriksaan yang sama dengan versi yang dipin.
-
-**Tes** dijalankan lewat satu pintu:
-```
-make test
-```
-Setiap berkas `tests/*.test.js` dijalankan di proses `gjs` sendiri, jadi tes yang memakai main loop tidak mengganggu tes lain.
-
-**Shell headless** (tidak mengganggu sesi utama):
-```
-make headless
-```
-`dev/fake-spotify.js` meniru pemutar MPRIS: tiga lagu, posisi berjalan otomatis, serta merespons Play/Pause/Next/Previous/SetPosition/Volume/LoopStatus. Hentikan dengan Ctrl-C.
-
-**Muat ulang setelah mengubah kode:**
-Pada Wayland GNOME Shell 50 tidak ada hot reload JavaScript. `gnome-extensions disable/enable` hanya memuat ulang CSS; perubahan JS butuh logout/login. Setelah mengubah `metadata.json` atau menambah key skema, logout/login juga diperlukan.
-
-**Log:**
-```
-journalctl --user -f | grep -i sonora
+│   ├── core/                  # Pure GJS logic (zero St/Clutter imports)
+│   ├── ui/                    # GNOME Shell top bar indicator & popup card
+│   └── util/                  # Color extraction, palettes, paths, translators
+├── tests/                     # GJS unit tests
+├── dev/                       # Fake MPRIS player, headless runner, MO compiler
+├── icons/                     # Custom symbolic icons
+└── docs/                      # Architecture notes, audit, roadmap, mockup
 ```
 
 ---
 
-## Batasan yang diketahui
+## Known Limitations
 
-- **Streak terpanjang dihitung ulang dari riwayat hari** setiap kali kartu diperbarui. Murah untuk data kecil, tapi linier terhadap jumlah hari.
-- **Detail harian dibatasi 10 hari** — `days[].artists` dan `days[].tracks` yang lebih lama dipangkas; total detik dan jumlah putar per hari tetap disimpan.
-- **Blur latar tidak tersedia** di GNOME Shell. Efek "kaca buram" di mockup diganti gradient Cairo, jadi hasilnya lebih tegas, bukan benar-benar blur.
-- **Desaturasi cover saat pause** tidak bisa lewat CSS karena album art adalah konten gambar; yang dipakai adalah penurunan opacity.
-- **Hanya Spotify.** Bus MPRIS ditulis tetap ke `org.mpris.MediaPlayer2.spotify`; pemutar lain tidak terdeteksi.
-- **Klik pill membuka kartu**, bukan play/pause. Kontrol pemutaran ada di dalam kartu.
-- Pada Wayland, perubahan kode butuh logout/login bila ekstensi gagal dimuat ulang dengan bersih.
+- **Spotify only**: Connects specifically to `org.mpris.MediaPlayer2.spotify`; other MPRIS media players are not targeted.
+- **No true Shell blur**: Uses Cairo radial gradients instead of backdrop blur for consistent performance and readability.
+- **Wayland reload**: On Wayland, JavaScript and `metadata.json` changes require logging out and back in (or using `make headless`).
 
 ---
 
-## Kontribusi
+## Contributing & Security
 
-Issue dan pull request diterima. Sebelum mengirim PR, jalankan `make lint`, `make test`, dan `make security`.
+Issues and Pull Requests are welcome. Before opening a PR, please ensure `make lint`, `make test`, and `make security` pass.
 
-## Keamanan
+Please report security vulnerabilities privately via GitHub Security Advisories rather than opening a public issue.
 
-Jangan membuka issue publik untuk kerentanan. Gunakan pelaporan kerentanan privat di GitHub. `make security` menjalankan Gitleaks dan Semgrep; CI juga memindai setiap push dan pull request.
+## Affiliation & License
 
-## Privasi dan afiliasi
+Sonora is an independent open-source project and is not affiliated with, endorsed by, or sponsored by Spotify. Spotify is a trademark of Spotify AB.
 
-- Tidak ada akun, telemetri, atau pengiriman data ke pembuat ekstensi.
-- Statistik disimpan lokal di `~/.local/share/spotify-ext/stats.json`.
-- Untuk lirik, judul, artis, album, dan durasi lagu dikirim ke `lrclib.net`.
-- Album art diambil dari URL `mpris:artUrl` yang disediakan Spotify.
-- Sonora tidak berafiliasi dengan Spotify. Spotify adalah merek dagang Spotify AB.
-
-## Lisensi
-
-Sonora didistribusikan di bawah GNU General Public License v3.0. Lihat [LICENSE](LICENSE).
+Distributed under the **GNU General Public License v3.0 (GPL-3.0)**. See [LICENSE](LICENSE).

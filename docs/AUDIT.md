@@ -1,9 +1,9 @@
 # Hasil Audit & Daftar Perbaikan
 
 Dokumen kerja untuk mencatat temuan audit kode Sonora. Bukan spesifikasi final.
-Line number mengacu pada branch `restructure` per 1 November 2026. Batch 1–8 sudah
+Line number mengacu pada branch `main` per 11 November 2026. Batch 1–8 sudah
 diterapkan; line number item yang belum dikerjakan bisa bergeser. Terakhir
-diperbarui: 2 November 2026.
+diperbarui: 11 November 2026.
 
 Status:
 

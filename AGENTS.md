@@ -27,3 +27,12 @@ Dokumen ini berisi panduan dan batasan wajib untuk pengembangan ekstensi Sonora 
   - `make security` (pemindaian Gitleaks dan Semgrep).
 - Untuk pengujian interaktif/headless, gunakan `make headless` (`gnome-shell --headless` + `dev/fake-spotify.js`). Opsi `--nested` tidak didukung pada GNOME Shell 50.
 - Perubahan kode JS di Wayland memerlukan logout/login atau sesi headless; reload ekstensi via CLI hanya memuat ulang CSS.
+
+## 5. Standar Publikasi, ASO (EGO), & SEO (GitHub)
+- **Penamaan Bersih & Aman Merek (`metadata.json`)**:
+  - Field `name` menggunakan identitas bersih `"Sonora"` (atau nama utama `"Sonora"` di depan tanpa meniru aplikasi resmi Spotify).
+  - Hindari em-dash (`—`); gunakan titik dua (`:`) atau koma (`,`).
+- **Deskripsi Toko Ekstensi Bebas Spam (`metadata.json`)**:
+  - Field `description` ditulis dalam bahasa Inggris natural dan padat nilai guna untuk pengguna akhir (`Spotify`, `now-playing`, `synced lyrics`, `playback controls`, `sleep timer`, `mic auto-duck`, `listening stats`), tanpa menyebut detail debugging internal (seperti tombol debug) dan tanpa *keyword stuffing* (daftar kata kunci dipisah koma tanpa kalimat).
+- **Dokumentasi Publik Berbahasa Inggris (`README.md`)**:
+  - `README.md` utama di root repositori menggunakan bahasa Inggris yang jelas agar terindeks baik di pencarian GitHub/Google serta ramah bagi pengguna dan kontributor terjemahan internasional (dokumentasi Indonesia dapat ditautkan ke `README.id.md`).
