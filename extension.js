@@ -29,20 +29,44 @@ function statsFile() {
     GLib.build_filenamev([GLib.get_user_data_dir(), 'spotify-ext', 'stats.json']));
 }
 
-function loadStats() {
-  try {
-    const [ok, bytes] = statsFile().load_contents(null);
-    if (ok) {
-      const raw = JSON.parse(new TextDecoder().decode(bytes));
-      const stats = normalizeStats(raw);
-      const dirty = pruneStats(stats) || raw?.version !== stats.version ||
-        raw?.tracks !== undefined || raw?.artists !== undefined;
-      return {stats, dirty};
+function loadStatsAsync(cancellable) {
+  return new Promise(resolve => {
+    try {
+      statsFile().load_contents_async(cancellable, (source, result) => {
+        try {
+          const [ok, bytes] = source.load_contents_finish(result);
+          if (ok) {
+            const raw = JSON.parse(new TextDecoder().decode(bytes));
+            const stats = normalizeStats(raw);
+            const dirty = pruneStats(stats) || raw?.version !== stats.version ||
+              raw?.tracks !== undefined || raw?.artists !== undefined;
+            resolve({stats, dirty});
+            return;
+          }
+        } catch {
+          // Missing, cancelled, or corrupt file: start fresh.
+        }
+        resolve({stats: emptyStats(), dirty: false});
+      });
+    } catch {
+      resolve({stats: emptyStats(), dirty: false});
     }
-  } catch {
-    // Missing or corrupt file: start fresh.
+  });
+}
+
+function mergePendingStats(target, pending) {
+  for (const [day, entry] of Object.entries(pending.days ?? {})) {
+    if (entry.seconds > 0)
+      addListen(target, {day, seconds: entry.seconds});
+    for (const [name, info] of Object.entries(entry.artists ?? {})) {
+      if (info.seconds > 0)
+        addListen(target, {day, artist: name, seconds: info.seconds});
+    }
+    for (const [, info] of Object.entries(entry.tracks ?? {})) {
+      for (let i = 0; i < (info.plays ?? 0); i++)
+        addPlay(target, {artist: info.artist, title: info.title, day});
+    }
   }
-  return {stats: emptyStats(), dirty: false};
 }
 
 function saveStats(stats) {
@@ -79,9 +103,9 @@ export default class SpotifyLyricsExtension extends Extension {
     this._settings = getSettings();
     this._spotify = new Spotify();
     this._volume = new VolumeController(this._spotify);
-    const loaded = loadStats();
-    this._stats = loaded.stats;
-    this._statsDirty = loaded.dirty;
+    this._stats = emptyStats();
+    this._statsDirty = false;
+    this._statsLoaded = false;
     this._statsRevision = 0;
     this._pruneDay = dayKey(new Date());
     this._destroyed = false;
@@ -105,6 +129,19 @@ export default class SpotifyLyricsExtension extends Extension {
     this._position = 0;
     this._positionAt = GLib.get_monotonic_time() / 1e6;
     this._cancellable = new Gio.Cancellable();
+    loadStatsAsync(this._cancellable).then(loaded => {
+      if (this._destroyed)
+        return;
+      if (this._statsDirty) {
+        mergePendingStats(loaded.stats, this._stats);
+        this._statsRevision++;
+      } else {
+        this._statsDirty = loaded.dirty;
+      }
+      this._stats = loaded.stats;
+      this._statsLoaded = true;
+      this._updateCardStats();
+    });
     this._http = new Soup.Session({timeout: 10});
     this._lyricsClient = new LyricsClient(this._cancellable);
     this._lyricsToken = new RequestToken();
@@ -158,13 +195,22 @@ export default class SpotifyLyricsExtension extends Extension {
   disable() {
     this._destroyed = true;
 
-    for (const timer of [this._syncTimer, this._tickTimer, this._saveTimer,
-      this._statsTimer]) {
-      if (timer)
-        GLib.source_remove(timer);
+    if (this._syncTimer) {
+      GLib.source_remove(this._syncTimer);
+      this._syncTimer = 0;
     }
-    this._syncTimer = this._tickTimer = this._saveTimer = 0;
-    this._statsTimer = 0;
+    if (this._tickTimer) {
+      GLib.source_remove(this._tickTimer);
+      this._tickTimer = 0;
+    }
+    if (this._saveTimer) {
+      GLib.source_remove(this._saveTimer);
+      this._saveTimer = 0;
+    }
+    if (this._statsTimer) {
+      GLib.source_remove(this._statsTimer);
+      this._statsTimer = 0;
+    }
 
     this._configWatch?.destroy();
     this._configWatch = null;
@@ -436,7 +482,7 @@ export default class SpotifyLyricsExtension extends Extension {
   }
 
   _saveStats() {
-    if (!this._stats)
+    if (!this._stats || !this._statsLoaded)
       return;
 
     const today = dayKey(new Date());

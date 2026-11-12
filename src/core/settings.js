@@ -33,27 +33,36 @@ export function destroySettings() {
 function migrateLegacyConfig(settings) {
   const path = GLib.build_filenamev([GLib.get_user_data_dir(), 'spotify-ext', 'config.json']);
   const file = Gio.File.new_for_path(path);
-  if (!file.query_exists(null))
-    return;
 
-  try {
-    const [ok, bytes] = file.load_contents(null);
-    if (ok) {
-      const raw = JSON.parse(new TextDecoder().decode(bytes));
-      if (MODES.includes(raw.mode))
-        settings.set_string('mode', raw.mode);
-      if (POSITIONS.includes(raw.position))
-        settings.set_string('position', raw.position);
+  file.load_contents_async(null, (source, result) => {
+    try {
+      const [ok, bytes] = source.load_contents_finish(result);
+      if (ok) {
+        const raw = JSON.parse(new TextDecoder().decode(bytes));
+        if (MODES.includes(raw.mode))
+          settings.set_string('mode', raw.mode);
+        if (POSITIONS.includes(raw.position))
+          settings.set_string('position', raw.position);
+      }
+    } catch {
+      // Missing or corrupt legacy file: keep schema defaults.
+      return;
     }
-  } catch {
-    // Corrupt legacy file: keep schema defaults.
-  }
 
-  try {
-    file.move(Gio.File.new_for_path(`${path}.migrated`), Gio.FileCopyFlags.OVERWRITE, null, null);
-  } catch {
-    // Best effort; the schema now holds the source of truth.
-  }
+    source.move_async(
+      Gio.File.new_for_path(`${path}.migrated`),
+      Gio.FileCopyFlags.OVERWRITE,
+      GLib.PRIORITY_DEFAULT,
+      null,
+      null,
+      (moveSource, moveResult) => {
+        try {
+          moveSource.move_finish(moveResult);
+        } catch {
+          // Best effort; the schema now holds the source of truth.
+        }
+      });
+  });
 }
 
 export function loadConfig() {
