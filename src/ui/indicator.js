@@ -40,6 +40,7 @@ export class SonoraIndicator {
     this._pillHeight = 0;
 
     this._openTimer = 0;
+    this._fitIdleId = 0;
     this._lastPosition = null;
     this._panelWidthId = 0;
 
@@ -167,6 +168,7 @@ export class SonoraIndicator {
       return Clutter.EVENT_PROPAGATE;
     });
     this._button.connect('leave-event', () => {
+      this._cancelOpen();
       this._scheduleClose();
       return Clutter.EVENT_PROPAGATE;
     });
@@ -174,14 +176,10 @@ export class SonoraIndicator {
       if (event.get_button() !== 1)
         return Clutter.EVENT_PROPAGATE;
 
-      if (this._cardOpenMode() === 'click') {
-        if (this._card?.isOpen())
-          this._card.close();
-        else
-          this._openCard();
-      } else {
+      if (this._card?.isOpen())
+        this._card.close();
+      else
         this._openCard();
-      }
       return Clutter.EVENT_PROPAGATE;
     });
   }
@@ -224,6 +222,7 @@ export class SonoraIndicator {
   }
 
   _scheduleClose() {
+    this._cancelOpen();
     if (this._pointerOverButton() || this._card?.isPointerOver())
       return;
     this._card?.scheduleClose();
@@ -246,11 +245,17 @@ export class SonoraIndicator {
     this._button.remove_style_class_name('sonora-mode-pill');
     this._button.remove_style_class_name('sonora-mode-icon');
     this._button.add_style_class_name(pill ? 'sonora-mode-pill' : 'sonora-mode-icon');
-    if (pill)
-      GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+    if (this._fitIdleId) {
+      GLib.source_remove(this._fitIdleId);
+      this._fitIdleId = 0;
+    }
+    if (pill) {
+      this._fitIdleId = GLib.idle_add(GLib.PRIORITY_DEFAULT_IDLE, () => {
+        this._fitIdleId = 0;
         this._fitPill();
         return GLib.SOURCE_REMOVE;
       });
+    }
   }
 
   _panelBoxes() {
@@ -615,6 +620,10 @@ export class SonoraIndicator {
     if (this._swapTimer) {
       GLib.source_remove(this._swapTimer);
       this._swapTimer = 0;
+    }
+    if (this._fitIdleId) {
+      GLib.source_remove(this._fitIdleId);
+      this._fitIdleId = 0;
     }
 
 

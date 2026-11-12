@@ -335,12 +335,18 @@ export class NowPlayingCard {
   // ---------- open / close ----------
 
   open(anchor, positionMode) {
+    this._cancelClose();
+    this._cancelPointerExit();
     this._anchor = anchor;
     this._positionMode = positionMode ?? 'right';
 
     this._relayout(false);
     this._place();
 
+    if (this._open && this._actor.visible)
+      return;
+
+    this._actor.remove_all_transitions();
     this._open = true;
     this._actor.visible = true;
     this._actor.set_pivot_point(0.5, 0);
@@ -361,7 +367,8 @@ export class NowPlayingCard {
 
   close(animate = true) {
     this._cancelClose();
-    if (!this._open)
+    this._cancelPointerExit();
+    if (!this._open && !this._actor.visible)
       return;
 
     this._open = false;
@@ -369,9 +376,14 @@ export class NowPlayingCard {
     this._lyricsOpen = false;
     this._statsOpen = false;
     this._syncAffordances();
+    this._actor.remove_all_transitions();
 
     const hide = () => {
+      if (this._destroyed || this._open)
+        return;
       this._actor.visible = false;
+      this._actor.set_opacity(255);
+      this._actor.set_scale(1, 1);
       this._actor.translation_y = 0;
     };
 
