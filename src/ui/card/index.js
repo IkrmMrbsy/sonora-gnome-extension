@@ -82,6 +82,7 @@ export class NowPlayingCard {
       width: CARD_WIDTH,
       height: 220,
       reactive: true,
+      visible: false,
       clip_to_allocation: false,
       accessible_name: _('Now playing'),
     });

@@ -41,6 +41,8 @@ export class SonoraIndicator {
 
     this._openTimer = 0;
     this._fitIdleId = 0;
+    [this._initPx, this._initPy] = global.get_pointer();
+    this._pointerMoved = false;
     this._lastPosition = null;
     this._panelWidthId = 0;
 
@@ -163,7 +165,15 @@ export class SonoraIndicator {
 
     this._button.connect('enter-event', () => {
       this._cancelClose();
-      if (this._cardOpenMode() !== 'click')
+      this._markPointerMoved();
+      if (this._cardOpenMode() !== 'click' && this._canHoverOpen())
+        this._scheduleOpen();
+      return Clutter.EVENT_PROPAGATE;
+    });
+    this._button.connect('motion-event', () => {
+      const wasMoved = this._pointerMoved;
+      this._markPointerMoved();
+      if (!wasMoved && this._cardOpenMode() !== 'click' && this._canHoverOpen() && !this._openTimer)
         this._scheduleOpen();
       return Clutter.EVENT_PROPAGATE;
     });
@@ -207,15 +217,30 @@ export class SonoraIndicator {
     return this._pointerOver(this._button?.container);
   }
 
+  _markPointerMoved() {
+    if (this._pointerMoved)
+      return;
+    const [px, py] = global.get_pointer();
+    if (px !== this._initPx || py !== this._initPy)
+      this._pointerMoved = true;
+  }
+
+  _canHoverOpen() {
+    return !Main.layoutManager?.startingUp &&
+      !Main.overview?.visible &&
+      !Main.sessionMode?.isLocked &&
+      this._pointerMoved;
+  }
+
   _scheduleOpen() {
-    if (this._card?.isOpen())
+    if (this._card?.isOpen() || !this._canHoverOpen())
       return;
 
     this._cancelOpen();
     const delay = Math.max(0, this._config.hoverDelay ?? 400);
     this._openTimer = GLib.timeout_add(GLib.PRIORITY_DEFAULT, delay, () => {
       this._openTimer = 0;
-      if (this._pointerOverButton())
+      if (this._canHoverOpen() && this._pointerOverButton())
         this._card?.open(this._button, this._config.position);
       return GLib.SOURCE_REMOVE;
     });
