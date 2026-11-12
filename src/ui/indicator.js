@@ -16,7 +16,6 @@ import {extensionDir} from '../util/path.js';
 
 const PILL_WIDTH = 240;
 const PILL_HEIGHT = 26;
-const PILL_TITLE = 116;
 const ROLE = 'sonora';
 const MOON_ICON = 'icons/sonora-moon-symbolic.svg';
 
@@ -129,12 +128,12 @@ export class SonoraIndicator {
     this._pillTitle = new St.Label({
       text: _('Nothing playing'),
       style_class: 'sonora-title',
-      width: PILL_TITLE,
+      x_expand: true,
       y_align: Clutter.ActorAlign.CENTER,
     });
     this._pillTitle.clutter_text.ellipsize = 3;
 
-    this._pillSpacer = new St.Widget({x_expand: true});
+    this._pillSpacer = new St.Widget({width: 2, visible: false});
 
     this._pillSlot = new St.BoxLayout({
       style_class: 'sonora-slot is-action',
@@ -186,16 +185,20 @@ export class SonoraIndicator {
       if (event.get_button() !== 1)
         return Clutter.EVENT_PROPAGATE;
 
-      if (this._card?.isOpen())
-        this._card.close();
-      else
-        this._openCard();
+      this.toggleCard();
       return Clutter.EVENT_PROPAGATE;
     });
   }
 
   _cardOpenMode() {
     return this._config.cardOpen ?? 'hover';
+  }
+
+  toggleCard() {
+    if (this._card?.isOpen())
+      this._card.close();
+    else
+      this._openCard();
   }
 
   _openCard() {
@@ -335,9 +338,6 @@ export class SonoraIndicator {
 
     this._pillWidth = width;
     this._pillBox.set_width(width);
-    this._pillTitle.set_width(width >= PILL_WIDTH
-      ? PILL_TITLE
-      : Math.max(46, width - 124));
     this._layoutPill();
   }
 
@@ -591,6 +591,7 @@ export class SonoraIndicator {
     if (icon)
       this._pillSlotIcon.set_gicon(Gio.icon_new_for_string(icon));
     this._pillSlotText.text = text;
+    this._pillSpacer.visible = this._hasTrack;
     this._pillSlot.visible = this._hasTrack;
     this._pillSlot.accessible_name = kind === 'sleep'
       ? _('Sleep timer %s, click to cancel').format(text)
@@ -606,6 +607,7 @@ export class SonoraIndicator {
       return;
 
     const content = this._slotContent();
+    this._pillSpacer.visible = this._hasTrack;
     this._pillSlot.visible = this._hasTrack;
     if (!this._hasTrack)
       return;
