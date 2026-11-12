@@ -203,7 +203,11 @@ export class SonoraIndicator {
 
   _openCard() {
     this._cancelOpen();
-    this._card?.open(this._button, this._config.position);
+    this._card?.open(
+      this._button,
+      this._config.position,
+      this._cardOpenMode() === 'click',
+    );
   }
 
   _pointerOver(actor) {

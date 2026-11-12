@@ -1,5 +1,6 @@
 import Clutter from 'gi://Clutter';
 import GLib from 'gi://GLib';
+import Shell from 'gi://Shell';
 import St from 'gi://St';
 
 import {gettext as _} from 'resource:///org/gnome/shell/extensions/extension.js';
@@ -52,6 +53,7 @@ export class NowPlayingCard {
     this._anchor = null;
     this._positionMode = 'right';
     this._eventId = 0;
+    this._modal = null;
 
     this._lyricsOpen = false;
     this._statsOpen = false;
@@ -337,7 +339,7 @@ export class NowPlayingCard {
 
   // ---------- open / close ----------
 
-  open(anchor, positionMode) {
+  open(anchor, positionMode, modal = false) {
     this._cancelClose();
     this._cancelPointerExit();
     this._anchor = anchor;
@@ -365,7 +367,7 @@ export class NowPlayingCard {
       mode: Clutter.AnimationMode.EASE_OUT_QUAD,
     });
 
-    this._grabEvents();
+    this._grabEvents(modal);
   }
 
   close(animate = true) {
@@ -516,8 +518,18 @@ export class NowPlayingCard {
 
   // ---------- events ----------
 
-  _grabEvents() {
+  _grabEvents(modal = false) {
     this._releaseEvents();
+    if (modal) {
+      try {
+        this._modal = Main.pushModal(this._actor, {
+          actionMode: Shell.ActionMode.POPUP,
+        });
+      } catch {
+        this._modal = null;
+      }
+    }
+
     this._eventId = global.stage.connect('captured-event', (actor, event) => {
       if (event.type() === Clutter.EventType.KEY_PRESS) {
         if (event.get_key_symbol() === Clutter.KEY_Escape) {
@@ -538,11 +550,16 @@ export class NowPlayingCard {
         return Clutter.EVENT_PROPAGATE;
 
       const [x, y] = event.get_coords();
-      if (this._inside(x, y, this._actor, -GAP) || this._inside(x, y, this._anchor, 0))
+      const insideCard = this._inside(x, y, this._actor, -GAP) ||
+        (this._tab?.visible && this._inside(x, y, this._tab, 0)) ||
+        (this._stab?.visible && this._inside(x, y, this._stab, 0)) ||
+        this._inside(x, y, this._anchor, 0);
+      if (insideCard)
         return Clutter.EVENT_PROPAGATE;
 
+      const wasModal = Boolean(this._modal);
       this.close();
-      return Clutter.EVENT_PROPAGATE;
+      return wasModal ? Clutter.EVENT_STOP : Clutter.EVENT_PROPAGATE;
     });
   }
 
@@ -559,6 +576,10 @@ export class NowPlayingCard {
     if (this._eventId) {
       global.stage.disconnect(this._eventId);
       this._eventId = 0;
+    }
+    if (this._modal) {
+      Main.popModal(this._modal);
+      this._modal = null;
     }
   }
 
