@@ -39,7 +39,7 @@ export class CardFooter {
       y_align: Clutter.ActorAlign.CENTER,
     });
     this._streakLabel = new St.Label({
-      text: '0d',
+      text: '',
       style_class: 'sonora-streak-label',
       y_align: Clutter.ActorAlign.CENTER,
     });
@@ -76,10 +76,10 @@ export class CardFooter {
     const best = stats?.bestStreak ?? 0;
 
     this._streakLabel.get_parent().visible = current > 0;
-    this._streakLabel.text = `${current}d`;
+    this._streakLabel.text = _('%dd').format(current);
     this._bestLabel.visible = best > 0;
     this._bestLabel.clutter_text.set_markup(
-      _('best %s').format(`<b>${GLib.markup_escape_text(String(best), -1)}d</b>`));
+      _('best %s').format(`<b>${GLib.markup_escape_text(_('%dd').format(best), -1)}</b>`));
   }
 
   applyAccent([r, g, b], rgba) {

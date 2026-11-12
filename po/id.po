@@ -510,3 +510,19 @@ msgstr "Minggu ini %s"
 #: src/ui/card/footer.js:80
 msgid "best %s"
 msgstr "terbaik %s"
+
+#: src/ui/widgets.js:14
+msgid "%dm"
+msgstr "%dm"
+
+#: src/ui/widgets.js:17
+msgid "%dh %dm"
+msgstr "%dj %dm"
+
+#: src/ui/widgets.js:17
+msgid "%dh"
+msgstr "%dj"
+
+#: src/ui/card/footer.js:79
+msgid "%dd"
+msgstr "%d hr"

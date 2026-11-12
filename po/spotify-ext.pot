@@ -511,3 +511,19 @@ msgstr ""
 #: src/ui/card/footer.js:80
 msgid "best %s"
 msgstr ""
+
+#: src/ui/widgets.js:14
+msgid "%dm"
+msgstr ""
+
+#: src/ui/widgets.js:17
+msgid "%dh %dm"
+msgstr ""
+
+#: src/ui/widgets.js:17
+msgid "%dh"
+msgstr ""
+
+#: src/ui/card/footer.js:79
+msgid "%dd"
+msgstr ""
