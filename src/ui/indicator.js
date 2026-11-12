@@ -251,6 +251,8 @@ export class SonoraIndicator {
 
   _scheduleClose() {
     this._cancelOpen();
+    if (this._cardOpenMode() === 'click')
+      return;
     if (this._pointerOverButton() || this._card?.isPointerOver())
       return;
     this._card?.scheduleClose();

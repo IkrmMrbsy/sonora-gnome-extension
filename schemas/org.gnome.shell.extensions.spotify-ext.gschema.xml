@@ -38,11 +38,10 @@
       <choices>
         <choice value="hover"/>
         <choice value="click"/>
-        <choice value="both"/>
       </choices>
       <default>'hover'</default>
       <summary>How the card opens</summary>
-      <description>Open on hover, only on click, or both.</description>
+      <description>Open on hover or only on click.</description>
     </key>
     <key name="hover-delay" type="i">
       <range min="0" max="2000"/>

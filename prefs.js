@@ -24,7 +24,6 @@ const getBgModes = () => [['album', _('Follow album color')], ['solid', _('Solid
 const getCardOpen = () => [
   ['hover', _('On hover')],
   ['click', _('On click only')],
-  ['both', _('Hover or click')],
 ];
 const getDuckModes = () => [
   ['off', _('Do not disturb music')],
