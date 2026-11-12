@@ -723,6 +723,8 @@ export default class SonoraPreferences extends ExtensionPreferences {
       activatable: true,
     });
     addIcon(debugRow, 'edit-copy-symbolic');
+    let copyTimerId = 0;
+    const originalSubtitle = debugRow.subtitle;
     debugRow.connect('activated', () => {
       const debugText = [
         `Sonora ${version}`,
@@ -741,14 +743,12 @@ export default class SonoraPreferences extends ExtensionPreferences {
           'text/plain;charset=utf-8', bytes));
       }
 
-      const original = debugRow.subtitle;
+      if (copyTimerId)
+        GLib.source_remove(copyTimerId);
       debugRow.subtitle = _('Copied to clipboard');
-      GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
-        try {
-          debugRow.subtitle = original;
-        } catch {
-          // The window may have been closed before the timeout fired.
-        }
+      copyTimerId = GLib.timeout_add(GLib.PRIORITY_DEFAULT, 2000, () => {
+        copyTimerId = 0;
+        debugRow.subtitle = originalSubtitle;
         return GLib.SOURCE_REMOVE;
       });
     });
@@ -774,6 +774,10 @@ export default class SonoraPreferences extends ExtensionPreferences {
       settings.connect('changed::duck-mode', syncDuckLevel),
     ];
     window.connect('close-request', () => {
+      if (copyTimerId) {
+        GLib.source_remove(copyTimerId);
+        copyTimerId = 0;
+      }
       for (const id of ids)
         settings.disconnect(id);
     });
