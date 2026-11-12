@@ -68,7 +68,7 @@ export class NowPlayingCard {
       this._destroyed = true;
     });
 
-    Main.layoutManager.addChrome(this._actor, {trackFullscreen: true});
+    Main.layoutManager.addChrome(this._actor);
     this._actor.visible = false;
     this._relayout(false);
 
@@ -208,7 +208,9 @@ export class NowPlayingCard {
       return 0;
 
     const natural = this._stats.measure(PADDING, width, STATS_GRID_GAP);
-    return clampStatsHeight(natural, STATS_MIN_H, this._statsMaxHeight());
+    const max = this._statsMaxHeight();
+    this._stats.setScrollable(natural > max);
+    return clampStatsHeight(natural, STATS_MIN_H, max);
   }
 
   // Let the drawer use every pixel available between the panel and the bottom

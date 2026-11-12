@@ -128,10 +128,17 @@ export class StatsPanel {
     this._tracksCol.set_width(colWidth);
   }
 
+  setScrollable(scrollable) {
+    this._scroll.vscrollbar_policy = scrollable
+      ? St.PolicyType.AUTOMATIC
+      : St.PolicyType.NEVER;
+  }
+
   measure(x, width, gap) {
     const innerWidth = Math.max(1, width - x * 2);
     this._setColumnWidths(innerWidth, gap);
     this._box.set_width(innerWidth);
+    this._box.set_height(-1);
     const [, natural] = this._box.get_preferred_height(innerWidth);
     return Math.max(1, natural);
   }
@@ -143,11 +150,10 @@ export class StatsPanel {
 
     const innerWidth = Math.max(1, width - x * 2);
     const visibleHeight = height > 0 ? height : 1;
-    const [, natural] = this._box.get_preferred_height(innerWidth);
 
     this._setColumnWidths(innerWidth, gap);
-    this._box.set_position(0, 0);
-    this._box.set_size(innerWidth, Math.max(visibleHeight, natural));
+    this._box.set_width(innerWidth);
+    this._box.set_height(-1);
     this._scroll.set_position(x, 0);
     this._scroll.set_size(innerWidth, visibleHeight);
   }
