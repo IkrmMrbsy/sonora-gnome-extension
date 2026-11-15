@@ -4,7 +4,7 @@
 
 **The music companion for GNOME.**
 
-Ekstensi GNOME Shell 50 / 51 yang menampilkan lagu Spotify yang sedang diputar langsung di panel atas, dengan lirik tersinkron, kontrol pemutaran, sleep timer, auto-duck mikrofon, dan statistik mendengarkan lokal.
+Ekstensi GNOME Shell 50 yang menampilkan lagu Spotify yang sedang diputar langsung di panel atas, dengan lirik tersinkron, kontrol pemutaran, sleep timer, auto-duck mikrofon, dan statistik mendengarkan lokal.
 
 Tidak memakai Web API Spotify dan tidak butuh login. Semua data diambil dari **MPRIS** (`org.mpris.MediaPlayer2.spotify`) di D-Bus session, jadi apa pun yang sedang diputar Spotify akan terbaca — termasuk kontrol play/pause/next/previous/seek lewat D-Bus.
 
@@ -12,7 +12,7 @@ Tidak memakai Web API Spotify dan tidak butuh login. Semua data diambil dari **M
 
 ## Kebutuhan
 
-- GNOME Shell **50** atau **51**
+- GNOME Shell **50**
 - Spotify (versi desktop, yang mengekspos MPRIS)
 - Koneksi internet hanya untuk mengambil lirik (`lrclib.net`) dan album art (`mpris:artUrl`)
 - Opsional: `Gvc` (biasanya sudah ada di GNOME) untuk fitur ducking mikrofon
