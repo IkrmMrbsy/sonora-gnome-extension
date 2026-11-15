@@ -1,10 +1,10 @@
 **English** | [Bahasa Indonesia](README.id.md)
 
-# Sonora: Spotify Now-Playing & Synced Lyrics for GNOME Shell 50
+# Sonora: Spotify Now-Playing & Synced Lyrics for GNOME Shell 50 / 51
 
 **The music companion for GNOME.**
 
-Sonora is a GNOME Shell 50 extension that displays your currently playing Spotify track directly on the top bar, featuring an adaptive now-playing card, synced lyrics, playback controls, a sleep timer, microphone auto-ducking, and local listening statistics.
+Sonora is a GNOME Shell 50 / 51 extension that displays your currently playing Spotify track directly on the top bar, featuring an adaptive now-playing card, synced lyrics, playback controls, a sleep timer, microphone auto-ducking, and local listening statistics.
 
 No Spotify Web API keys and no account login required. All playback state and metadata are read locally via **MPRIS** (`org.mpris.MediaPlayer2.spotify`) on the D-Bus session bus, including full `Play`, `Pause`, `Next`, `Previous`, `Seek`, and `LoopStatus` controls.
 
@@ -24,7 +24,7 @@ No Spotify Web API keys and no account login required. All playback state and me
 
 ## Requirements
 
-- **GNOME Shell 50**
+- **GNOME Shell 50 or 51**
 - **Spotify** desktop client exposing MPRIS (`org.mpris.MediaPlayer2.spotify`)
 - **Internet access** only for fetching album art (`mpris:artUrl`) and synced lyrics (`lrclib.net`)
 - Optional: `Gvc` (typically bundled with GNOME Shell) for microphone detection
